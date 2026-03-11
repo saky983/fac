@@ -5,7 +5,6 @@ let facturas = [];
 async function leerPDF() {
   const file = document.getElementById("pdfFile").files[0];
   if (!file) { alert("Selecciona un archivo PDF primero."); return; }
-
   setStatus("📄 Cargando archivo…");
 
   const typedarray = await new Promise((resolve, reject) => {
@@ -21,91 +20,94 @@ async function leerPDF() {
   try {
     pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
   } catch (e) {
-    setStatus("❌ Error al abrir PDF: " + e.message);
-    return;
+    setStatus("❌ Error al abrir PDF: " + e.message); return;
   }
 
   const allItems = [];
-
   for (let p = 1; p <= pdf.numPages; p++) {
     const page    = await pdf.getPage(p);
     const vp      = page.getViewport({ scale: 1 });
     const content = await page.getTextContent();
-    const baseY   = (p - 1) * 5000;
+    const baseX   = (p - 1) * 5000; // offset por página en eje X
 
     for (const item of content.items) {
       const str = (item.str || "").trim();
       if (!str) continue;
+      // PDF rotado: la coordenada "fila" es X, la "columna" es Y
       allItems.push({
-        x: item.transform[4],
-        y: (vp.height - item.transform[5]) + baseY,
+        fila: item.transform[4] + baseX,   // X = qué bomba (fila)
+        col:  vp.height - item.transform[5], // Y invertido = qué columna
         str
       });
     }
   }
 
-  setStatus(`🧩 ${allItems.length} elementos extraídos, analizando…`);
+  setStatus(`🧩 ${allItems.length} elementos, analizando…`);
   procesarItems(allItems);
 }
 
 // ── PARSER ────────────────────────────────────────────────────────────────────
+// En este PDF rotado:
+//   Todas las celdas de una misma bomba comparten el mismo valor de X (fila)
+//   Las columnas se identifican por Y:
+//     "No. de Tanque" / "SUPER/REGULAR/DIESEL" → col Y ≈ 468/576
+//     ID bomba (1,2,3...)  → col Y ≈ 569
+//     "Auto Serv."         → col Y ≈ 533
+//     DIF USD LECT. DISP.  → col Y ≈ -113 (la más baja)
+
 function procesarItems(allItems) {
   bombas = [];
 
-  // Agrupar en filas por proximidad Y (±8px)
+  // Agrupar por FILA (mismo X ± 8px)
   const filas = [];
   for (const item of allItems) {
-    let fila = null;
-    for (const f of filas) {
-      if (Math.abs(f.y - item.y) <= 8) { fila = f; break; }
-    }
-    if (!fila) { fila = { y: item.y, items: [] }; filas.push(fila); }
+    let fila = filas.find(f => Math.abs(f.filaRef - item.fila) <= 8);
+    if (!fila) { fila = { filaRef: item.fila, items: [] }; filas.push(fila); }
     fila.items.push(item);
   }
 
-  filas.sort((a, b) => a.y - b.y);
+  // Ordenar filas de izquierda a derecha (X creciente)
+  filas.sort((a, b) => a.filaRef - b.filaRef);
 
   let producto = "";
 
   for (const fila of filas) {
-    fila.items.sort((a, b) => a.x - b.x);
+    // Ordenar items dentro de la fila por columna (Y)
+    fila.items.sort((a, b) => b.col - a.col); // Y alto = columna izquierda
 
-    // Texto completo de la fila (todos los items unidos)
     const texto = fila.items.map(i => i.str).join(" ").toUpperCase();
 
-    // ── Detectar producto ────────────────────────────────────────────────────
-    // Acepta tanto "TIPO DE SUPER" como "SUPER" solos, ignorando filas de datos
-    const esFilaDato = /AUTO\s*SERV/i.test(texto) || fila.items.some(i => /auto/i.test(i.str) && i.x >= 60 && i.x <= 120);
-    if (!esFilaDato) {
+    // Detectar cambio de producto — filas que tienen SUPER/REGULAR/DIESEL
+    // pero NO tienen "Auto Serv."
+    const tieneAuto = fila.items.some(i => /auto/i.test(i.str));
+    if (!tieneAuto) {
       if (/\bSUPER\b/.test(texto))   { producto = "S"; continue; }
       if (/\bREGULAR\b/.test(texto)) { producto = "R"; continue; }
       if (/\bDIESEL\b/.test(texto))  { producto = "D"; continue; }
     }
 
     if (!producto) continue;
-
-    // ── Verificar que hay "Auto" en la fila (x entre 55 y 130, más generoso) ─
-    const tieneAuto = fila.items.some(i => i.x >= 55 && i.x <= 130 && /auto/i.test(i.str));
     if (!tieneAuto) continue;
 
-    // ── ID de bomba: número entero 1-50 en x <= 70 ──────────────────────────
-    const idItem = fila.items.find(i => i.x <= 70 && /^\d+$/.test(i.str.trim()));
+    // ID de bomba: número 1-50 en col Y entre 550 y 590
+    const idItem = fila.items.find(i => {
+      const col = i.col;
+      return col >= 550 && col <= 590 && /^\d+$/.test(i.str.trim());
+    });
     if (!idItem) continue;
     const bomba = parseInt(idItem.str.trim(), 10);
     if (bomba < 1 || bomba > 50) continue;
 
-    // ── DIF USD: item más a la derecha con x >= 690 ──────────────────────────
-    const difItems = fila.items.filter(i => i.x >= 690);
-    if (!difItems.length) continue;
-    difItems.sort((a, b) => b.x - a.x);
-    const monto = parseFloat(difItems[0].str.replace(/[$,\s]/g, ""));
+    // DIF USD: item con col Y más bajo (más negativo = última columna)
+    const difItem = fila.items.reduce((min, i) => i.col < min.col ? i : min, fila.items[0]);
+    const monto = parseFloat(difItem.str.replace(/[$,\s]/g, ""));
     if (isNaN(monto)) continue;
 
     bombas.push({ bomba, sabor: producto, monto });
   }
 
   if (!bombas.length) {
-    setStatus("⚠️ No se detectaron bombas. Verifica el PDF.");
+    setStatus("⚠️ No se detectaron bombas.");
   } else {
     setStatus(`✅ ${bombas.length} bombas detectadas.`);
   }
@@ -132,7 +134,6 @@ function mostrarBombas() {
     });
     html += `</tbody></table></div>`;
   });
-
   document.getElementById("resultado").innerHTML = html;
 }
 
@@ -157,7 +158,7 @@ function generarFacturas(soloPositivas = false) {
   const totalFact = Object.values(facturable).reduce((s,v) => s+v, 0);
 
   if (bacRestante > totalFact + 0.01) {
-    alert(`⚠️ El monto BAC ($${bacRestante.toFixed(2)}) supera el total facturable ($${totalFact.toFixed(2)})`);
+    alert(`⚠️ BAC ($${bacRestante.toFixed(2)}) supera facturable ($${totalFact.toFixed(2)})`);
     return;
   }
 
@@ -169,7 +170,7 @@ function generarFacturas(soloPositivas = false) {
 
     if (bacRestante > 0) {
       let bac = Math.min(monto, bacRestante);
-      bac         = Math.round(bac * 100) / 100;
+      bac = Math.round(bac * 100) / 100;
       bacRestante = Math.round((bacRestante - bac) * 100) / 100;
       let tmp = bac;
       while (tmp > 200) { facturas.push({ bomba: b.bomba, sabor: b.sabor, monto: 200, metodo: "B" }); tmp = Math.round((tmp-200)*100)/100; }
@@ -221,7 +222,6 @@ function mostrarFacturas() {
     });
     html += `</tbody></table></div>`;
   });
-
   document.getElementById("resultado").innerHTML = html;
 }
 
@@ -237,7 +237,6 @@ function exportar() {
   a.click();
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
 function setStatus(msg) {
   document.getElementById("status").textContent = msg;
 }
