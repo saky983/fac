@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zuno · Admin Estación</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060810;--s1:#0d0f18;--s2:#131620;--s3:#1a1d2a;--s4:#222535;
+  --border:#1e2130;--border2:#2a2e42;
+  --blue:#3b82f6;--blue2:#60a5fa;--bluebg:rgba(59,130,246,0.08);--blueborder:rgba(59,130,246,0.2);
+  --purple:#7c5cfc;--purple2:#a78bfa;--purplebg:rgba(124,92,252,0.08);--purpleborder:rgba(124,92,252,0.2);
+  --red:#f43f5e;--redbg:rgba(244,63,94,0.08);--redborder:rgba(244,63,94,0.2);--red2:#fb7185;
+  --green:#10b981;--greenbg:rgba(16,185,129,0.08);--greenborder:rgba(16,185,129,0.2);--green2:#34d399;
+  --gold:#f59e0b;--goldbg:rgba(245,158,11,0.08);--goldborder:rgba(245,158,11,0.2);--gold2:#fbbf24;
+  --text:#f0f0f8;--text2:#8888aa;--text3:#44445a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;max-width:480px;margin:0 auto;overflow-x:hidden;padding-bottom:80px}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.2;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;top:0;left:50%;transform:translateX(-50%);width:400px;height:400px;background:radial-gradient(ellipse,rgba(59,130,246,0.1) 0%,transparent 70%);pointer-events:none;z-index:0}
+.scr{display:none;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+.scr.on{display:flex}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--text3);margin-bottom:8px;font-family:'Plus Jakarta Sans'}
+.field input,.field select{width:100%;padding:13px 16px;background:var(--s2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;outline:none;transition:all .2s;-webkit-appearance:none}
+.field input:focus,.field select:focus{border-color:var(--blue);background:var(--s3)}
+.field input::placeholder{color:var(--text3)}
+.field select option{background:#131620}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;font-family:'Plus Jakarta Sans';font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn:active{transform:scale(.98)}
+.btn-b{background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff;box-shadow:0 4px 24px rgba(59,130,246,0.3)}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-sm{padding:6px 12px;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans';transition:all .15s}
+.btn-sm:active{transform:scale(.95)}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:11px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green2)}
+.toast.err{border-color:var(--red);color:var(--red2)}
+.loading{display:none;position:absolute;inset:0;background:rgba(255,255,255,0);align-items:center;justify-content:center;flex-direction:column;gap:10px;border-radius:12px;z-index:10}.loading.show{display:flex}
+.spinner{width:44px;height:44px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:12px;color:var(--text2);font-family:'Plus Jakarta Sans'}
+.mov{display:none;position:fixed;inset:0;background:rgba(6,8,16,.92);backdrop-filter:blur(16px);z-index:200;align-items:flex-end;justify-content:center}
+.mov.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border2);border-top:2px solid var(--blue);border-radius:20px 20px 0 0;padding:24px 20px 48px;width:100%;max-width:480px;animation:mIn .3s cubic-bezier(.34,1.2,.64,1);max-height:92vh;overflow-y:auto}
+@keyframes mIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-family:'Plus Jakarta Sans';font-size:20px;font-weight:800;margin-bottom:4px}
+.msub{color:var(--text2);font-size:13px;margin-bottom:18px;line-height:1.5}
+/* LOGIN */
+#s-login{justify-content:center;align-items:center;padding:40px 24px;background:radial-gradient(ellipse at 50% 0%,rgba(59,130,246,0.1),transparent 60%)}
+.l-ico{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,var(--blue),#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 14px;box-shadow:0 0 40px rgba(59,130,246,0.3)}
+.l-title{font-family:'Plus Jakarta Sans';font-size:36px;font-weight:800;letter-spacing:.5px;text-align:center}
+.l-sub{font-size:11px;color:var(--text3);text-align:center;margin-top:4px;margin-bottom:32px;font-family:'Plus Jakarta Sans'}
+.l-card{width:100%;background:var(--s1);border:1px solid var(--border2);border-radius:16px;padding:24px}
+.l-badge{text-align:center;padding:8px 16px;background:var(--bluebg);border:1px solid var(--blueborder);border-radius:8px;font-size:10px;font-weight:700;color:var(--blue2);font-family:'Plus Jakarta Sans';margin-bottom:20px;letter-spacing:.3px}
+/* TOPBAR */
+.topbar{background:rgba(13,15,24,0.96);backdrop-filter:blur(20px);padding:14px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.tb-row{display:flex;align-items:center;justify-content:space-between}
+.tb-brand{display:flex;align-items:center;gap:10px}
+.tb-ico{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:15px}
+.tb-name{font-family:'Plus Jakarta Sans';font-size:15px;font-weight:800}
+.tb-sub{font-size:10px;color:var(--text3);font-family:'Plus Jakarta Sans'}
+.chip{padding:4px 10px;border-radius:5px;font-size:9px;font-weight:700;font-family:'Plus Jakarta Sans';letter-spacing:.5px}
+.chip-s{background:var(--bluebg);border:1px solid var(--blueborder);color:var(--blue2)}
+.out-btn{padding:6px 12px;background:var(--redbg);border:1px solid var(--redborder);border-radius:7px;color:var(--red2);font-size:11px;font-weight:600;cursor:pointer}
+/* ALERT */
+.alert-bar{margin:12px 16px 0;background:rgba(245,158,11,0.06);border:1px solid var(--goldborder);border-radius:12px;padding:11px 14px;display:none;align-items:center;gap:10px;cursor:pointer}
+.a-dot{width:26px;height:26px;border-radius:7px;background:var(--gold);color:#000;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px 0}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.kpi-g{position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;opacity:.12;filter:blur(20px)}
+.kpi-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--text3);font-family:'Plus Jakarta Sans';margin-bottom:8px}
+.kpi-v{font-family:'Plus Jakarta Sans';font-size:26px;font-weight:800;line-height:1}
+.kpi-s{font-size:10px;color:var(--text3);margin-top:4px}
+/* ESTACION INFO */
+.stn-banner{margin:12px 16px 0;background:linear-gradient(135deg,var(--bluebg),rgba(59,130,246,0.04));border:1px solid var(--blueborder);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.stn-banner-ico{font-size:28px}
+.stn-banner-info{flex:1}
+.stn-banner-name{font-family:'Plus Jakarta Sans';font-size:15px;font-weight:800;color:var(--blue2)}
+.stn-banner-addr{font-size:11px;color:var(--text3);margin-top:3px}
+.stn-banner-multi{font-size:10px;font-family:'Plus Jakarta Sans';color:var(--blue2);margin-top:4px}
+/* TABS */
+.nav-tabs{display:flex;gap:4px;padding:12px 16px 0;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.ntab{padding:7px 13px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.ntab.on{background:var(--bluebg);border-color:var(--blueborder);color:var(--blue2)}
+/* PANELS */
+.panel{padding:12px 16px 0;display:none}
+.panel.on{display:block}
+.p-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.p-hdr h2{font-family:'Plus Jakarta Sans';font-size:18px;font-weight:800}
+.p-hdr p{font-size:11px;color:var(--text3);margin-top:2px}
+/* CARDS */
+.rows{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer}
+.crow{display:flex;align-items:center;gap:12px}
+.av{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-size:17px;font-weight:800;color:#fff;flex-shrink:0}
+.ci{flex:1;min-width:0}
+.cn{font-weight:600;font-size:14px;font-family:'Plus Jakarta Sans'}
+.cs{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5}
+.cp{font-size:11px;color:var(--gold2);font-weight:600;margin-top:2px;font-family:'Plus Jakarta Sans'}
+.ca{display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;font-family:'Plus Jakarta Sans'}
+.bv{background:var(--greenbg);color:var(--green2);border:1px solid var(--greenborder)}
+.bp{background:var(--goldbg);color:var(--gold2);border:1px solid var(--goldborder)}
+.br{background:var(--redbg);color:var(--red2);border:1px solid var(--redborder)}
+.item-row{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:12px}
+.ii{flex:1}.in{font-weight:700;font-size:14px;font-family:'Plus Jakarta Sans'}.is{font-size:11px;color:var(--text3);margin-top:2px}.iv{font-family:'Plus Jakarta Sans';font-size:12px;color:var(--gold2);margin-top:3px}
+.ia{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.pin-badge{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--blue),#1d4ed8);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-size:13px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.5px}
+.empty{text-align:center;color:var(--text3);padding:36px 20px;font-size:13px;line-height:1.8}
+.e-ico{font-size:36px;margin-bottom:10px;display:block}
+.ibox{border-radius:10px;padding:11px 14px;font-size:12px;line-height:1.7;margin-bottom:12px}
+.ig{background:var(--goldbg);border:1px solid var(--goldborder);color:var(--gold2)}
+.ib{background:var(--bluebg);border:1px solid var(--blueborder);color:var(--blue2)}
+.pts-hero{background:var(--s2);border:1px solid var(--redborder);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px}
+.ph-num{font-family:'Plus Jakarta Sans';font-size:48px;font-weight:800;color:var(--red2);line-height:1}
+.ph-sub{font-size:13px;color:var(--text2);margin-top:6px}
+.dui-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.di{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px}
+.di-l{font-size:9px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;font-weight:700;font-family:'Plus Jakarta Sans'}
+.di-v{font-weight:700;font-size:13px}
+.app-row{display:flex;gap:8px}
+.app-row button{flex:1;padding:13px;border-radius:10px;border:none;font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;cursor:pointer}
+.app-btn{background:var(--green);color:#000}
+.rej-btn{background:var(--redbg);border:1.5px solid var(--redborder)!important;color:var(--red2)}
+.hist-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.hist-item:last-child{border-bottom:none}
+.hd{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.hi{flex:1}.hn{font-size:12px;font-weight:600}.hdate{font-size:10px;color:var(--text3);font-family:'Plus Jakarta Sans'}
+.earn{color:var(--red2)}.spend{color:var(--green2)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.panel.on>*{animation:fadeUp .2s ease both}
+
+/* Respuesta instantánea */
+button,.btn,.ntab,.qa,.card,.mi,.rm-btn,.btn-sm,.tab,.bn,.back,.out-btn{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:active,.btn:active,.ntab:active,.qa:active,.card:active,.btn-sm:active{transform:scale(.97);opacity:.85;transition:transform .08s,opacity .08s}
+.btn-p:active,.btn-green:active,.btn-b:active{transform:scale(.97)!important}
+/* Letter spacing ajustado para Plus Jakarta Sans */
+.logo-name,.succ-title,.succ-big,.pg-hdr h2,.pts-num,.qr-big,.cc-name,.topbar h1,.sc-val,.pp-num{letter-spacing:.5px!important}
+.btn,.btn-p,.btn-b,.btn-g,.btn-green{letter-spacing:.3px!important;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="scr on">
+  <div class="l-ico">🏪</div>
+  <div class="l-title">ZUNO</div>
+  <div class="l-sub">ADMIN DE ESTACIÓN 🇸🇻</div>
+  <div class="l-card">
+    <div class="l-badge">🔵 ACCESO — ADMIN ESTACIÓN</div>
+    <div class="field"><label>Usuario</label><input type="text" id="l-u" placeholder="admin_tecla" autocomplete="off"></div>
+    <div class="field"><label>Contraseña</label><input type="password" id="l-p" placeholder="••••••"></div>
+    <button class="btn btn-b" onclick="doLogin()">Entrar a mi estación →</button>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div id="s-main" class="scr">
+  <div class="topbar">
+    <div class="tb-row">
+      <div class="tb-brand">
+        <div class="tb-ico">🏪</div>
+        <div><div class="tb-name">ZUNO Estación</div><div class="tb-sub" id="top-sub">—</div></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="chip chip-s">🔵 ESTACIÓN</span>
+        <button class="out-btn" onclick="doLogout()">Salir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banner estación -->
+  <div class="stn-banner" id="stn-banner" style="display:none">
+    <div class="stn-banner-ico">⛽</div>
+    <div class="stn-banner-info">
+      <div class="stn-banner-name" id="stn-name">—</div>
+      <div class="stn-banner-addr" id="stn-addr">—</div>
+      <div class="stn-banner-multi" id="stn-multi">1pt por $1</div>
+    </div>
+  </div>
+
+  <div class="alert-bar" id="alert-bar" onclick="gotoTab('verificaciones')">
+    <div class="a-dot" id="alert-n">0</div>
+    <div style="font-size:13px;color:var(--gold2);font-weight:600;flex:1" id="alert-txt">pendientes</div>
+    <span style="color:var(--gold);font-size:18px">›</span>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-g" style="background:var(--red)"></div><div class="kpi-l">Mis clientes</div><div class="kpi-v" style="color:var(--red2)" id="k1">—</div><div class="kpi-s" id="k1s">—</div></div>
+    <div class="kpi"><div class="kpi-g" style="background:var(--blue)"></div><div class="kpi-l">Puntos emitidos</div><div class="kpi-v" style="color:var(--blue2)" id="k2">—</div><div class="kpi-s">en mi estación</div></div>
+    <div class="kpi"><div class="kpi-g" style="background:var(--gold)"></div><div class="kpi-l">Canjes</div><div class="kpi-v" style="color:var(--gold2)" id="k3">—</div><div class="kpi-s">procesados</div></div>
+    <div class="kpi"><div class="kpi-g" style="background:var(--green)"></div><div class="kpi-l">Visitas</div><div class="kpi-v" style="color:var(--green2)" id="k4">—</div><div class="kpi-s">acumuladas</div></div>
+  </div>
+
+  <div class="nav-tabs">
+    <div class="ntab on" data-panel="clientes">👥 Clientes</div>
+    <div class="ntab" data-panel="verificaciones">🆔 Verificar</div>
+    <div class="ntab" data-panel="cajeros">🏪 Cajeros</div>
+    <div class="ntab" data-panel="pines">🔑 PINes</div>
+    <div class="ntab" data-panel="premios">🎁 Premios</div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div class="panel on" id="p-clientes">
+    <div class="p-hdr">
+      <div><h2>👥 Clientes</h2><p id="cl-ct">—</p></div>
+      <select id="cl-filter" onchange="filtrarClientes()" style="padding:7px 10px;background:var(--s2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:11px;outline:none;-webkit-appearance:none">
+        <option value="all">Todos</option><option value="verified">Verificados</option><option value="pending">Pendientes</option>
+      </select>
+    </div>
+    <div class="rows" id="r-clientes"><div class="empty"><span class="e-ico">👥</span>Cargando...</div></div>
+  </div>
+
+  <!-- VERIFICACIONES -->
+  <div class="panel" id="p-verificaciones">
+    <div class="p-hdr"><div><h2>🆔 Verificaciones</h2><p>Aprobá o rechazá solicitudes</p></div></div>
+    <div class="rows" id="r-verif"><div class="empty"><span class="e-ico">✅</span>Sin pendientes</div></div>
+  </div>
+
+  <!-- CAJEROS -->
+  <div class="panel" id="p-cajeros">
+    <div class="p-hdr">
+      <div><h2>🏪 Mis Cajeros</h2><p id="caj-stn-lbl">—</p></div>
+    </div>
+    <div class="ibox ig">⚠️ Usuario de prueba siempre activo: <strong>cajero1 / caja</strong></div>
+    <div class="rows" id="r-cajeros"></div>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="oCajero()">+ Crear cajero</button>
+  </div>
+
+  <!-- PINES -->
+  <div class="panel" id="p-pines">
+    <div class="p-hdr"><div><h2>🔑 PINes de Empleados</h2><p>Para autorizar canjes</p></div></div>
+    <div class="ibox ib">🔑 El empleado ingresa su PIN en el cajero antes de cada canje para identificarse.</div>
+    <div class="rows" id="r-pines"></div>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="oPin()">+ Agregar PIN de empleado</button>
+  </div>
+
+  <!-- PREMIOS -->
+  <div class="panel" id="p-premios">
+    <div class="p-hdr"><div><h2>🎁 Premios</h2><p>Catálogo vigente</p></div></div>
+    <div class="pts-hero"><div class="ph-num">1PT = $1</div><div class="ph-sub">1 punto por cada dólar consumido</div></div>
+    <div class="rows" id="r-rw"></div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="mov" id="m-cliente">
+  <div class="modal">
+    <h3 id="mc-name">—</h3>
+    <p class="msub" id="mc-sub">—</p>
+    <div class="dui-grid">
+      <div class="di"><div class="di-l">Código</div><div class="di-v" id="mc-code">—</div></div>
+      <div class="di"><div class="di-l">DUI</div><div class="di-v" id="mc-dui">—</div></div>
+      <div class="di"><div class="di-l">Teléfono</div><div class="di-v" id="mc-phone">—</div></div>
+      <div class="di"><div class="di-l">Registrado</div><div class="di-v" id="mc-date">—</div></div>
+      <div class="di"><div class="di-l">Puntos</div><div class="di-v" style="color:var(--gold2)" id="mc-pts">—</div></div>
+      <div class="di"><div class="di-l">Visitas</div><div class="di-v" style="color:var(--green2)" id="mc-vis">—</div></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700;font-family:'Plus Jakarta Sans';margin-bottom:10px">Historial reciente</div>
+      <div id="mc-hist"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="btn-sm" style="flex:1;padding:11px;background:var(--goldbg);border:1px solid var(--goldborder);color:var(--gold2)" onclick="oPtsFromClient()">± Ajustar puntos</button>
+      <button class="btn-sm" id="mc-vbtn" style="flex:1;padding:11px;background:var(--bluebg);border:1px solid var(--blueborder);color:var(--blue2)" onclick="approveFromClient()">✓ Verificar DUI</button>
+    </div>
+    <button class="btn btn-ghost" onclick="closeM('m-cliente')">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL DUI -->
+<div class="mov" id="m-dui">
+  <div class="modal">
+    <h3>🆔 Verificar cliente</h3>
+    <p class="msub" id="m-dui-sub">—</p>
+    <div class="ibox ig">📋 Verificá el DUI físicamente en persona antes de aprobar.</div>
+    <div class="dui-grid">
+      <div class="di"><div class="di-l">Nombre</div><div class="di-v" id="di-name">—</div></div>
+      <div class="di"><div class="di-l">DUI</div><div class="di-v" id="di-dui">—</div></div>
+      <div class="di"><div class="di-l">Teléfono</div><div class="di-v" id="di-phone">—</div></div>
+      <div class="di"><div class="di-l">Registrado</div><div class="di-v" id="di-date">—</div></div>
+    </div>
+    <div class="app-row">
+      <button class="app-btn" onclick="approve()">✓ Aprobar</button>
+      <button class="rej-btn" onclick="reject()">✗ Rechazar</button>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closeM('m-dui')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL PUNTOS -->
+<div class="mov" id="m-pts">
+  <div class="modal">
+    <h3>± Ajuste de puntos</h3>
+    <p class="msub" id="m-pts-sub">—</p>
+    <div class="field"><label>Puntos (negativo para restar)</label><input type="number" id="m-pts-v" placeholder="Ej: 50 o -20"></div>
+    <div class="field"><label>Motivo</label><input type="text" id="m-pts-n" placeholder="Ej: Corrección manual..."></div>
+    <button class="btn btn-b" onclick="confPts()">Aplicar →</button>
+    <button class="btn btn-ghost" onclick="closeM('m-pts')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL CAJERO -->
+<div class="mov" id="m-cajero">
+  <div class="modal">
+    <h3>🏪 Nuevo Cajero</h3>
+    <p class="msub" id="m-caj-sub">—</p>
+    <div class="field"><label>Nombre</label><input type="text" id="m-caj-name" placeholder="Ej: María González"></div>
+    <div class="field"><label>Usuario</label><input type="text" id="m-caj-user" placeholder="Ej: cajero1_tecla"></div>
+    <div class="field"><label>Contraseña</label><input type="password" id="m-caj-pass" placeholder="Mínimo 6 caracteres"></div>
+    <div class="field"><label>Correo (para cierre de turno)</label><input type="email" id="m-caj-email" placeholder="cajero@ejemplo.com"></div>
+    <button class="btn btn-b" onclick="confCajero()">Crear cajero →</button>
+    <button class="btn btn-ghost" onclick="closeM('m-cajero')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL PIN -->
+<div class="mov" id="m-pin">
+  <div class="modal">
+    <h3>🔑 PIN de Empleado</h3>
+    <p class="msub">El empleado usa este PIN para autorizar canjes en el cajero.</p>
+    <div class="field"><label>Nombre del empleado</label><input type="text" id="m-pin-name" placeholder="Ej: Juan Pérez"></div>
+    <div class="field"><label>PIN de 4 dígitos</label><input type="text" id="m-pin-pin" placeholder="Ej: 3592" maxlength="4" inputmode="numeric"></div>
+    <button class="btn btn-b" onclick="confPin()">Guardar PIN →</button>
+    <button class="btn btn-ghost" onclick="closeM('m-pin')">Cancelar</button>
+  </div>
+</div>
+
+<div class="loading" id="loading" style="position:fixed;inset:0;background:rgba(6,6,8,.0);z-index:1;pointer-events:none"><div style="background:rgba(13,13,18,.95);border:1px solid #2a2a3e;border-radius:16px;padding:20px 32px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);pointer-events:all"><div class="spinner"></div><p id="load-txt" style="font-size:13px;font-weight:600;white-space:nowrap">Cargando...</p></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore,doc,getDoc,setDoc,updateDoc,deleteDoc,collection,addDoc,query,where,getDocs,orderBy,limit,increment,arrayUnion } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const app=initializeApp({apiKey:"AIzaSyAqXjnH6WrXuEQivE3RGwvav1qyFOOyoeY",authDomain:"zuno-1285e.firebaseapp.com",projectId:"zuno-1285e",storageBucket:"zuno-1285e.firebasestorage.app",messagingSenderId:"234427184784",appId:"1:234427184784:web:1bdb29f6f2a1f4e85b4a15"});
+const db=getFirestore(app);
+
+const COLS=['#f43f5e','#10b981','#3b82f6','#f59e0b','#7c5cfc','#06b6d4'];
+const uC=id=>COLS[Math.abs([...id].reduce((a,c)=>a+c.charCodeAt(0),0))%COLS.length];
+const uI=n=>(n||'?').charAt(0).toUpperCase();
+const fD=ts=>ts?new Date(ts).toLocaleDateString('es-SV',{day:'2-digit',month:'short',year:'numeric'}):'—';
+const fDN=()=>new Date().toLocaleDateString('es-SV');
+const nv=pts=>pts>=3000?{l:'💎 Diamante',c:'#06b6d4'}:pts>=1500?{l:'🥇 Oro',c:'#f59e0b'}:pts>=500?{l:'🥈 Plata',c:'#8888aa'}:{l:'🥉 Bronce',c:'#cd7c2f'};
+
+const load=(s,t='Cargando...')=>{
+  const el=document.getElementById('loading');
+  if(!el)return;
+  if(s){
+    el.style.display='flex';
+    el.style.pointerEvents='all';
+    const txt=document.getElementById('load-txt');
+    if(txt)txt.textContent=t;
+  } else {
+    el.style.display='none';
+    el.style.pointerEvents='none';
+  }
+};
+const toast=(m,type='')=>{const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(type?' '+type:'');setTimeout(()=>t.className='toast',3000);};
+window.closeM=id=>document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.mov').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open')}));
+
+const getCfg=async(k,d)=>{try{const s=await getDoc(doc(db,'config',k));return s.exists()?s.data().list:d;}catch{return d;}};
+const getRw=()=>getCfg('rewards',[]);
+const getStns=()=>getCfg('stations',[]);
+const getCaj=()=>getCfg('cajeros',[]);
+const getPins=()=>getCfg('pines',[]);
+
+let CU=null,vUID=null,vUDOC=null,eUID=null,ALL_USERS=[];
+
+// TABS
+document.querySelectorAll('.ntab').forEach(tab=>{
+  tab.addEventListener('click',async function(){
+    document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+    this.classList.add('on');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    const panel=document.getElementById('p-'+this.dataset.panel);
+    if(panel)panel.classList.add('on');
+    load(true);await renderAll();load(false);
+  });
+});
+window.gotoTab=async tab=>{
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.toggle('on',t.dataset.panel===tab));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  const el=document.getElementById('p-'+tab);if(el)el.classList.add('on');
+  renderAll().catch(console.error);
+}
+
+// LOGIN
+window.doLogin=async()=>{
+  const u=document.getElementById('l-u').value.trim(),p=document.getElementById('l-p').value;
+  if(!u||!p){toast('Completá los campos','err');return;}
+  load(true,'Verificando...');
+  try{
+    const admins=await getCfg('admins',[]);
+    const found=admins.find(a=>a.user===u&&a.pass===p);
+    if(!found){toast('Credenciales incorrectas','err');load(false);return;}
+    const stns=await getStns();
+    const stn=stns.find(s=>s.id===found.stationId);
+    CU={...found,station:stn||{id:found.stationId,name:'Mi Estación',addr:'—',multiplier:1}};
+    // Mostrar banner estación
+    document.getElementById('stn-banner').style.display='flex';
+    document.getElementById('stn-name').textContent=CU.station.name;
+    document.getElementById('stn-addr').textContent='📍 '+CU.station.addr;
+    document.getElementById('stn-multi').textContent=CU.station.multiplier>1?'★ '+CU.station.multiplier+'× puntos':'1pt por $1';
+    document.getElementById('top-sub').textContent=found.name+' · '+CU.station.name;
+    document.getElementById('caj-stn-lbl').textContent=CU.station.name;
+    load(false);
+    document.getElementById('s-login').classList.remove('on');
+    document.getElementById('s-main').classList.add('on');
+    await renderAll();
+  }catch(e){toast('Error de conexión','err');load(false);}
+}
+
+window.doLogout=()=>{
+  CU=null;
+  document.getElementById('s-main').classList.remove('on');
+  document.getElementById('s-login').classList.add('on');
+  document.getElementById('l-u').value='';document.getElementById('l-p').value='';
+}
+
+// RENDER ALL
+async function renderAll(){
+  if(!CU)return;
+  try{
+    const snap=await getDocs(query(collection(db,'users'),where('role','==','client')));
+    ALL_USERS=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const pend=ALL_USERS.filter(u=>!u.verified);
+    document.getElementById('k1').textContent=ALL_USERS.length;
+    document.getElementById('k1s').textContent=pend.length?pend.length+' pendientes':'todos verificados';
+    document.getElementById('k2').textContent=ALL_USERS.reduce((s,u)=>s+(u.points||0),0).toLocaleString();
+    document.getElementById('k4').textContent=ALL_USERS.reduce((s,u)=>s+(u.visits||0),0).toLocaleString();
+    try{const tx=await getDocs(query(collection(db,'transactions'),where('type','==','redeem')));document.getElementById('k3').textContent=tx.size;}catch{document.getElementById('k3').textContent='0';}
+    const ab=document.getElementById('alert-bar');
+    if(pend.length){ab.style.display='flex';document.getElementById('alert-n').textContent=pend.length;document.getElementById('alert-txt').textContent='cliente'+(pend.length>1?'s':'')+' pendiente'+(pend.length>1?'s':'')+' de verificación';}
+    else ab.style.display='none';
+    rClientes(ALL_USERS);rVerif(pend);
+    await rCajeros();await rPines();await rRw();
+  }catch(e){console.error(e);}
+}
+
+// CLIENTES
+function rClientes(users){
+  const f=document.getElementById('cl-filter')?.value||'all';
+  const list=f==='verified'?users.filter(u=>u.verified):f==='pending'?users.filter(u=>!u.verified):users;
+  document.getElementById('cl-ct').textContent=list.length+' cliente'+(list.length!==1?'s':'');
+  const el=document.getElementById('r-clientes');
+  if(!list.length){el.innerHTML='<div class="empty"><span class="e-ico">👥</span>Sin clientes aún</div>';return;}
+  el.innerHTML=list.map(u=>{const n=nv(u.points||0);return`
+    <div class="card" onclick="verCliente('${u.id}')">
+      <div class="crow">
+        <div class="av" style="background:${uC(u.id)}">${uI(u.name)}</div>
+        <div class="ci">
+          <div class="cn">${u.name}</div>
+          <div class="cs">📱 ${u.phone} · ${u.code}</div>
+          <div class="cp">⭐ ${(u.points||0).toLocaleString()} pts · <span style="color:${n.c}">${n.l}</span></div>
+        </div>
+        <div class="ca">
+          <span class="badge ${u.verified?'bv':'bp'}">${u.verified?'ACTIVO':'PENDIENTE'}</span>
+          <span style="font-size:10px;color:var(--text3);font-family:'Plus Jakarta Sans'">${u.visits||0} vis.</span>
+        </div>
+      </div>
+    </div>`;}).join('');
+}
+window.filtrarClientes=()=>rClientes(ALL_USERS);
+
+window.verCliente=async id=>{
+  const u=ALL_USERS.find(x=>x.id===id);if(!u)return;
+  vUID=id;vUDOC=u;
+  document.getElementById('mc-name').textContent=u.name;
+  document.getElementById('mc-sub').textContent=(u.verified?'✅ Verificado':'⏳ Pendiente')+' · '+u.code;
+  document.getElementById('mc-code').textContent=u.code;
+  document.getElementById('mc-dui').textContent=u.dui;
+  document.getElementById('mc-phone').textContent=u.phone;
+  document.getElementById('mc-date').textContent=fD(u.registeredAt);
+  document.getElementById('mc-pts').textContent=(u.points||0).toLocaleString()+' pts';
+  document.getElementById('mc-vis').textContent=(u.visits||0)+' visitas';
+  document.getElementById('mc-vbtn').style.display=u.verified?'none':'block';
+  const hist=u.history||[];
+  const hEl=document.getElementById('mc-hist');
+  if(!hist.length){hEl.innerHTML='<div style="text-align:center;color:var(--text3);padding:14px;font-size:12px">Sin historial</div>';}
+  else{hEl.innerHTML=hist.slice().reverse().slice(0,8).map(h=>`
+    <div class="hist-item">
+      <div class="hd" style="background:${h.earn?'var(--redbg)':'var(--greenbg)'}">${h.earn?'⛽':'🎁'}</div>
+      <div class="hi"><div class="hn">${h.name}</div><div class="hdate">${h.date}</div></div>
+      <div style="font-family:'Plus Jakarta Sans';font-size:12px;font-weight:700" class="${h.earn?'earn':'spend'}">${h.earn?'+':'-'}${h.pts}</div>
+    </div>`).join('');}
+  document.getElementById('m-cliente').classList.add('open');
+}
+window.oPtsFromClient=()=>{closeM('m-cliente');setTimeout(()=>oPts(vUID,vUDOC.name,vUDOC.points||0),200);}
+window.approveFromClient=()=>{closeM('m-cliente');setTimeout(()=>oDUI(vUID),200);}
+
+// VERIFICACIONES
+function rVerif(pend){
+  const el=document.getElementById('r-verif');
+  if(!pend.length){el.innerHTML='<div class="empty"><span class="e-ico">✅</span>Sin verificaciones pendientes</div>';return;}
+  el.innerHTML=pend.map(u=>`
+    <div class="card">
+      <div class="crow">
+        <div class="av" style="background:${uC(u.id)}">${uI(u.name)}</div>
+        <div class="ci"><div class="cn">${u.name}</div><div class="cs">📱 ${u.phone} · 🆔 ${u.dui}</div><div class="cp">${fD(u.registeredAt)}</div></div>
+        <button class="btn-sm" style="background:var(--bluebg);border:1px solid var(--blueborder);color:var(--blue2)" onclick="oDUI('${u.id}')">Revisar →</button>
+      </div>
+    </div>`).join('');
+}
+window.oDUI=async id=>{
+  load(true);
+  try{const snap=await getDoc(doc(db,'users',id));if(!snap.exists()){load(false);return;}
+    vUID=id;vUDOC={id,...snap.data()};
+    document.getElementById('m-dui-sub').textContent='Cliente: '+vUDOC.name;
+    document.getElementById('di-name').textContent=vUDOC.name;document.getElementById('di-dui').textContent=vUDOC.dui;
+    document.getElementById('di-phone').textContent=vUDOC.phone;document.getElementById('di-date').textContent=fD(vUDOC.registeredAt);
+    load(false);document.getElementById('m-dui').classList.add('open');
+  }catch(e){load(false);}
+}
+window.approve=async()=>{
+  if(!vUID)return;load(true,'Aprobando...');
+  try{await updateDoc(doc(db,'users',vUID),{verified:true});closeM('m-dui');toast('✅ '+vUDOC.name+' aprobado','ok');await renderAll();load(false);}
+  catch(e){toast('Error','err');load(false);}
+}
+window.reject=async()=>{
+  if(!vUID)return;if(!confirm('¿Rechazar y eliminar a '+vUDOC.name+'?'))return;load(true);
+  try{await deleteDoc(doc(db,'users',vUID));closeM('m-dui');toast('Rechazado','err');await renderAll();load(false);}
+  catch(e){toast('Error','err');load(false);}
+}
+window.oPts=(id,name,pts)=>{
+  eUID=id;document.getElementById('m-pts-sub').textContent=name+' — actual: '+pts+' pts';
+  document.getElementById('m-pts-v').value='';document.getElementById('m-pts-n').value='';
+  document.getElementById('m-pts').classList.add('open');
+}
+window.confPts=async()=>{
+  const pts=parseInt(document.getElementById('m-pts-v').value),note=document.getElementById('m-pts-n').value.trim()||'Ajuste admin';
+  if(isNaN(pts)||pts===0){toast('Ingresá los puntos','err');return;}
+  load(true,'Aplicando...');
+  try{
+    await updateDoc(doc(db,'users',eUID),{points:increment(pts),history:arrayUnion({earn:pts>0,name:note,pts:Math.abs(pts),date:fDN()})});
+    await addDoc(collection(db,'transactions'),{userId:eUID,user:'Admin Estación',station:note,pts:Math.abs(pts),type:pts>0?'earn':'redeem',date:fDN(),ts:Date.now()});
+    closeM('m-pts');toast((pts>0?'+':'')+pts+' pts aplicados ✓','ok');await renderAll();load(false);
+  }catch(e){toast('Error','err');load(false);}
+}
+
+// CAJEROS — solo los de esta estación
+async function rCajeros(){
+  const el=document.getElementById('r-cajeros');if(!el||!CU)return;
+  const caj=await getCaj();
+  const mios=caj.filter(c=>c.stationId===CU.stationId);
+  if(!mios.length){el.innerHTML='<div class="empty"><span class="e-ico">🏪</span>Sin cajeros en esta estación</div>';return;}
+  el.innerHTML=mios.map(c=>`
+    <div class="item-row">
+      <div style="font-size:24px;width:40px;text-align:center">🏪</div>
+      <div class="ii"><div class="in">${c.name}</div><div class="is">👤 ${c.user} · 🔑 ${c.pass}</div>${c.email?`<div class="is">📧 ${c.email}</div>`:''}</div>
+      <button class="btn-sm" style="background:var(--redbg);border:1px solid var(--redborder);color:var(--red2)" onclick="delCajero('${c.id}')">Eliminar</button>
+    </div>`).join('');
+}
+window.oCajero=()=>{
+  document.getElementById('m-caj-sub').textContent='Se asignará a: '+CU.station.name;
+  ['m-caj-name','m-caj-user','m-caj-pass','m-caj-email'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-cajero').classList.add('open');
+}
+window.confCajero=async()=>{
+  const name=document.getElementById('m-caj-name').value.trim(),user=document.getElementById('m-caj-user').value.trim(),pass=document.getElementById('m-caj-pass').value,email=document.getElementById('m-caj-email').value.trim();
+  if(!name||!user||!pass){toast('Completá todos los campos','err');return;}
+  load(true,'Creando cajero...');
+  try{
+    const caj=await getCaj();
+    if(caj.find(c=>c.user===user)){toast('Ese usuario ya existe','err');load(false);return;}
+    caj.push({id:'caj'+Date.now(),name,user,pass,email,stationId:CU.stationId});
+    await setDoc(doc(db,'config','cajeros'),{list:caj});
+    closeM('m-cajero');toast('Cajero creado ✓','ok');await renderAll();load(false);
+  }catch(e){toast('Error','err');load(false);}
+}
+window.delCajero=async id=>{
+  if(!confirm('¿Eliminar este cajero?'))return;load(true);
+  try{const c=await getCaj();await setDoc(doc(db,'config','cajeros'),{list:c.filter(x=>x.id!==id)});toast('Eliminado','ok');await renderAll();load(false);}
+  catch(e){toast('Error','err');load(false);}
+}
+
+// PINES — solo los de esta estación
+async function rPines(){
+  const el=document.getElementById('r-pines');if(!el||!CU)return;
+  const pines=await getPins();
+  const mios=pines.filter(p=>p.stationId===CU.stationId||p.stationId==='todas');
+  if(!mios.length){el.innerHTML='<div class="empty"><span class="e-ico">🔑</span>Sin PINes en esta estación</div>';return;}
+  el.innerHTML=mios.map(p=>`
+    <div class="item-row">
+      <div class="pin-badge">${p.pin}</div>
+      <div class="ii"><div class="in">${p.nombre}</div><div class="is">🔐 PIN: <strong style="color:var(--blue2);font-family:'Plus Jakarta Sans'">${p.pin}</strong></div></div>
+      <button class="btn-sm" style="background:var(--redbg);border:1px solid var(--redborder);color:var(--red2)" onclick="delPin('${p.id}')">Eliminar</button>
+    </div>`).join('');
+}
+window.oPin=()=>{
+  document.getElementById('m-pin-name').value='';document.getElementById('m-pin-pin').value='';
+  document.getElementById('m-pin').classList.add('open');
+}
+window.confPin=async()=>{
+  const nombre=document.getElementById('m-pin-name').value.trim(),pin=document.getElementById('m-pin-pin').value.trim();
+  if(!nombre){toast('Ingresá el nombre','err');return;}if(!/^\d{4}$/.test(pin)){toast('El PIN debe ser 4 dígitos','err');return;}
+  load(true,'Guardando...');
+  try{
+    const pines=await getPins();
+    if(pines.find(p=>p.pin===pin)){toast('Ese PIN ya existe','err');load(false);return;}
+    pines.push({id:'pin'+Date.now(),nombre,pin,stationId:CU.stationId});
+    await setDoc(doc(db,'config','pines'),{list:pines});
+    closeM('m-pin');toast('PIN creado ✓','ok');await renderAll();load(false);
+  }catch(e){toast('Error','err');load(false);}
+}
+window.delPin=async id=>{
+  if(!confirm('¿Eliminar este PIN?'))return;load(true);
+  try{const p=await getPins();await setDoc(doc(db,'config','pines'),{list:p.filter(x=>x.id!==id)});toast('PIN eliminado','ok');await renderAll();load(false);}
+  catch(e){toast('Error','err');load(false);}
+}
+
+// PREMIOS — solo lectura
+async function rRw(){
+  const el=document.getElementById('r-rw');if(!el)return;
+  const rw=await getRw();
+  const activos=rw.filter(r=>r.active!==false);
+  if(!activos.length){el.innerHTML='<div class="empty"><span class="e-ico">🎁</span>Sin premios activos</div>';return;}
+  el.innerHTML=activos.map(r=>`
+    <div class="item-row">
+      <div style="font-size:26px;width:40px;text-align:center">${r.icon}</div>
+      <div class="ii"><div class="in">${r.name}</div><div class="is">${r.desc}</div><div class="iv">⭐ ${r.cost} pts</div></div>
+      <span class="badge bv">ACTIVO</span>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>

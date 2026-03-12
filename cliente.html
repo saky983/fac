@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zuno – Mi Cuenta</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--s1:#111;--s2:#1a1a1a;--s3:#222;--border:#2a2a2a;--red:#e02020;--red2:#ff3333;--red3:#ff6666;--redbg:rgba(224,32,32,0.08);--redborder:rgba(224,32,32,0.25);--green:#22c55e;--greenbg:rgba(34,197,94,0.08);--greenborder:rgba(34,197,94,0.25);--text:#f5f5f5;--text2:#a0a0a0;--text3:#555}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden;padding-bottom:90px}
+body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(224,32,32,0.1),transparent 70%);pointer-events:none;z-index:0}
+.scr{display:none;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+.scr.on{display:flex;animation:scrIn .3s ease}
+@keyframes scrIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,10,0.96);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:none;padding:10px 0 24px;z-index:100}
+.bnav.show{display:flex}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;transition:color .2s}
+.bn.on{color:var(--red2)}.bni{font-size:20px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px}
+.field input{width:100%;padding:14px 16px;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(224,32,32,0.1)}
+.field input::placeholder{color:var(--text3)}
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:10px;font-family:'Plus Jakarta Sans';font-size:18px;letter-spacing:.3px;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn:active{transform:scale(0.98)}
+.btn-red{background:linear-gradient(135deg,var(--red),#c01010);color:#fff;box-shadow:0 4px 20px rgba(224,32,32,0.35)}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text2);margin-top:8px}
+.tabs{display:flex;background:var(--s2);border-radius:10px;padding:4px;margin-bottom:24px;border:1px solid var(--border)}
+.tab{flex:1;padding:10px;border:none;background:transparent;color:var(--text3);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;border-radius:7px;cursor:pointer;transition:all .2s}
+.tab.on{background:var(--red);color:#fff}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:18px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--s2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:9998;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red2);color:var(--red2)}
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);z-index:200;align-items:flex-end;justify-content:center}
+.mov.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border);border-top:2px solid var(--red);border-radius:20px 20px 0 0;padding:28px 22px 48px;width:100%;max-width:430px;animation:modalIn .3s ease}
+@keyframes modalIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-family:'Plus Jakarta Sans';font-size:24px;letter-spacing:1px;margin-bottom:6px}
+.modal p{color:var(--text2);font-size:14px;margin-bottom:18px;line-height:1.6}
+.loading{display:none;position:absolute;inset:0;background:rgba(255,255,255,0);align-items:center;justify-content:center;flex-direction:column;gap:10px;border-radius:12px;z-index:10}.loading.show{display:flex}
+.spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--red2);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:14px;color:var(--text2)}
+#s-login{justify-content:center;align-items:center;padding:40px 28px;gap:4px;background:linear-gradient(180deg,#180303,var(--bg) 50%)}
+.logo-area{text-align:center;margin-bottom:32px}
+.logo-icon{width:80px;height:80px;border-radius:20px;margin:0 auto 16px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 8px 32px rgba(224,32,32,0.5);animation:lp 3s ease-in-out infinite}
+@keyframes lp{0%,100%{box-shadow:0 8px 32px rgba(224,32,32,0.5)}50%{box-shadow:0 8px 48px rgba(224,32,32,0.8)}}
+.logo-name{font-family:'Plus Jakarta Sans';font-size:52px;letter-spacing:.5px}
+.logo-sub{font-size:13px;color:var(--text3);margin-top:4px}
+.login-box{width:100%;background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:24px}
+#s-home{padding:0 0 20px}
+.hdr{background:linear-gradient(160deg,#180303,var(--bg));padding:28px 22px 24px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hdr::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(224,32,32,0.12),transparent 70%)}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;position:relative}
+.hdr-greet{font-size:13px;color:var(--text3)}
+.hdr-name{font-family:'Plus Jakarta Sans';font-size:26px;letter-spacing:1px;margin-top:2px}
+.hdr-av{width:46px;height:46px;border-radius:12px;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-size:22px;color:#fff}
+.pts-hero{background:linear-gradient(135deg,#180303,#0f0f0f);border:1px solid var(--redborder);border-radius:18px;padding:24px;margin:20px;position:relative;overflow:hidden}
+.pts-hero::before{content:'⛽';position:absolute;bottom:-15px;right:12px;font-size:90px;opacity:.05;line-height:1}
+.pts-hero::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.pts-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--text3);margin-bottom:8px}
+.pts-num{font-family:'Plus Jakarta Sans';font-size:54px;font-weight:800;line-height:1;margin-bottom:4px}
+.pts-eq{font-size:13px;color:var(--text3);margin-bottom:20px}
+.pts-eq .v{color:var(--green);font-weight:700}
+.prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:600}
+.prog-t{height:6px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden}
+.prog-f{height:100%;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:100px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.prog-n{font-size:11px;color:var(--text3);margin-top:8px}
+.prog-n span{color:var(--red3);font-weight:700}
+.pend-ban{margin:0 20px 16px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:12px;padding:12px 16px;display:none;align-items:center;gap:10px;font-size:13px;color:#f5a623}
+.qa-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 20px 24px}
+.qa{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:18px 14px;text-align:center;cursor:pointer;transition:all .25s}
+.qa:hover{border-color:var(--red);transform:translateY(-2px)}
+.qa:active{transform:scale(.97)}
+.qa-ic{font-size:28px;margin-bottom:10px;display:block}
+.qa-lbl{font-size:13px;font-weight:600}
+.sec-t{font-family:'Plus Jakarta Sans';font-size:20px;letter-spacing:1px;padding:0 22px 14px;color:var(--text2)}
+.hist{padding:0 20px;display:flex;flex-direction:column;gap:8px}
+.hi{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;animation:hiIn .3s ease both}
+@keyframes hiIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.hi-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.hi-info{flex:1}.hi-name{font-weight:600;font-size:14px}.hi-date{font-size:12px;color:var(--text3);margin-top:2px}
+.hi-pts{font-family:'Plus Jakarta Sans';font-size:18px;letter-spacing:.5px}
+.earn{color:var(--red2)}.spend{color:var(--green)}
+#s-qr{align-items:center;padding:28px 22px}
+.pg-hdr{display:flex;align-items:center;gap:14px;width:100%;margin-bottom:32px}
+.back{width:40px;height:40px;border-radius:10px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px}
+.back:hover{border-color:var(--red)}
+.pg-hdr h2{font-family:'Plus Jakarta Sans';font-size:26px;letter-spacing:1px}
+.qr-frame{width:220px;height:220px;border-radius:20px;background:var(--s1);position:relative;margin:0 auto 28px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px var(--red),0 0 40px rgba(224,32,32,0.2)}
+.qr-c{position:absolute;width:20px;height:20px;border-color:var(--red);border-style:solid}
+.qr-c.tl{top:-1px;left:-1px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.qr-c.tr{top:-1px;right:-1px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+.qr-c.bl{bottom:-1px;left:-1px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+.qr-c.br{bottom:-1px;right:-1px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.beam{position:absolute;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--red2),transparent);animation:bm 2.5s ease-in-out infinite}
+@keyframes bm{0%{top:15%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:82%;opacity:0}}
+.qr-in{text-align:center}.qr-em{font-size:52px;display:block;margin-bottom:4px}
+.qr-cs{font-family:'Plus Jakarta Sans';font-size:20px;letter-spacing:.5px;color:var(--red3)}
+.qr-card{width:100%;text-align:center;margin-bottom:20px}
+.qr-card .lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px}
+.qr-big{font-family:'Plus Jakarta Sans';font-size:52px;letter-spacing:8px;line-height:1}
+.qr-hint{font-size:13px;color:var(--text3);margin-top:8px}
+#s-rewards{padding:0 0 20px}
+.rw-hdr{padding:28px 22px 20px}
+.rw-hdr h1{font-family:'Plus Jakarta Sans';font-size:32px;letter-spacing:.3px;margin-bottom:4px}
+.rw-hdr p{font-size:14px;color:var(--text2)}
+.pts-chip{margin:0 20px 20px;background:var(--redbg);border:1px solid var(--redborder);border-radius:12px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.pts-chip .lbl{font-size:13px;color:var(--text2)}
+.pts-chip .val{font-family:'Plus Jakarta Sans';font-size:28px;letter-spacing:1px;color:var(--red2)}
+.lock-note{margin:0 20px 16px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:12px;padding:14px 16px;font-size:13px;color:#f5a623;line-height:1.7;display:none}
+.rw-list{padding:0 20px;display:flex;flex-direction:column;gap:10px}
+.rw{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;transition:all .2s}
+.rw.avail{border-color:var(--redborder)}
+.rw-ic{font-size:30px;width:48px;text-align:center;flex-shrink:0}
+.rw-info{flex:1}.rw-name{font-weight:700;font-size:15px;margin-bottom:3px}
+.rw-desc{font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.5}
+.rw-cost{display:inline-flex;align-items:center;gap:5px;background:var(--redbg);border:1px solid var(--redborder);padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;color:var(--red3)}
+.rw-btn{padding:10px 14px;border-radius:8px;border:none;font-family:'Plus Jakarta Sans';font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.rw-btn.can{background:var(--red);color:#fff}
+.rw-btn.no{background:var(--s3);color:var(--text3);cursor:not-allowed;font-size:11px}
+.rw-btn.lock{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);color:#f5a623;cursor:not-allowed;font-size:11px}
+#s-profile{padding:0 22px 20px}
+.prof-hd{text-align:center;padding:32px 0 28px}
+.prof-av{width:88px;height:88px;border-radius:22px;margin:0 auto 16px;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-size:38px;color:#fff;box-shadow:0 8px 32px rgba(224,32,32,0.45)}
+.prof-name{font-family:'Plus Jakarta Sans';font-size:28px;letter-spacing:1px}
+.prof-dui,.prof-phone{font-size:13px;color:var(--text3);margin-top:3px}
+.tier-tag{display:inline-block;margin-top:12px;padding:6px 16px;border-radius:8px;font-size:13px;font-weight:700;background:var(--redbg);border:1px solid var(--redborder);color:var(--red3)}
+.verif-tag{display:inline-block;margin-top:8px;margin-left:8px;padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700}
+.verif-tag.ok{background:var(--greenbg);border:1px solid var(--greenborder);color:var(--green)}
+.verif-tag.pend{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:#f5a623}
+.stats3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:24px}
+.sb{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.sb-v{font-family:'Plus Jakarta Sans';font-size:26px;letter-spacing:.5px;color:var(--red2)}
+.sb-l{font-size:11px;color:var(--text3);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.menu{display:flex;flex-direction:column;gap:8px}
+.mi{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s}
+.mi:hover{border-color:var(--red);background:var(--redbg)}
+.mi-ic{font-size:20px;width:30px}.mi-tx{flex:1;font-size:15px;font-weight:500}.mi-ar{color:var(--text3)}
+.logout{width:100%;padding:15px;margin-top:16px;background:transparent;border:1.5px solid rgba(255,51,51,.3);border-radius:10px;color:var(--red3);font-family:'Plus Jakarta Sans';font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.logout:hover{background:var(--redbg)}
+
+/* Respuesta instantánea */
+button,.btn,.ntab,.qa,.card,.mi,.rm-btn,.btn-sm,.tab,.bn,.back,.out-btn{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:active,.btn:active,.ntab:active,.qa:active,.card:active,.btn-sm:active{transform:scale(.97);opacity:.85;transition:transform .08s,opacity .08s}
+.btn-p:active,.btn-green:active,.btn-b:active{transform:scale(.97)!important}
+/* Letter spacing ajustado para Plus Jakarta Sans */
+.logo-name,.succ-title,.succ-big,.pg-hdr h2,.pts-num,.qr-big,.cc-name,.topbar h1,.sc-val,.pp-num{letter-spacing:.5px!important}
+.btn,.btn-p,.btn-b,.btn-g,.btn-green{letter-spacing:.3px!important;font-weight:700}
+</style>
+</head>
+<body>
+
+<div id="s-login" class="scr on">
+  <div class="logo-area">
+    <div class="logo-icon">⛽</div>
+    <div class="logo-name">ZUNO</div>
+    <div class="logo-sub">Puntos en gasolineras · El Salvador 🇸🇻</div>
+  </div>
+  <div class="login-box">
+    <div class="tabs">
+      <button class="tab on" onclick="setTab('login')">Entrar</button>
+      <button class="tab" onclick="setTab('register')">Registrarse</button>
+    </div>
+    <div id="lt-login">
+      <div class="field"><label>Teléfono</label><input type="tel" id="l-phone" placeholder="7000-0000"></div>
+      <div class="field"><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••••"></div>
+      <button class="btn btn-red" onclick="doLogin()">Entrar →</button>
+    </div>
+    <div id="lt-reg" style="display:none">
+      <div class="field"><label>Nombre completo</label><input type="text" id="r-name" placeholder="Tu nombre completo"></div>
+      <div class="field"><label>DUI (sin guión)</label><input type="text" id="r-dui" placeholder="012345678" maxlength="9"></div>
+      <div class="field"><label>Teléfono</label><input type="tel" id="r-phone" placeholder="7000-0000"></div>
+      <div class="field"><label>Contraseña</label><input type="password" id="r-pass" placeholder="Mínimo 6 caracteres"></div>
+      <button class="btn btn-red" onclick="doRegister()">Crear cuenta →</button>
+      <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);line-height:1.6">El admin verificará tu DUI en menos de 24h.<br>Mientras tanto podés acumular puntos.</p>
+    </div>
+  </div>
+</div>
+
+<div id="s-pending" class="scr" style="justify-content:center;align-items:center;padding:40px 28px;text-align:center;gap:20px;background:linear-gradient(180deg,#180303,var(--bg) 50%)">
+  <div style="width:100px;height:100px;border-radius:50%;border:2px solid var(--red);display:flex;align-items:center;justify-content:center;font-size:48px;box-shadow:0 0 40px rgba(224,32,32,0.3)">⏳</div>
+  <div>
+    <div style="font-family:'Plus Jakarta Sans';font-size:32px;letter-spacing:.3px;margin-bottom:8px">¡Registro recibido!</div>
+    <div style="color:var(--text2);font-size:14px;line-height:1.7;max-width:300px;margin:0 auto">El admin verificará tu identidad en menos de 24 horas. Mientras tanto ya podés acumular puntos.</div>
+  </div>
+  <div style="background:var(--s1);border:1px solid var(--redborder);border-radius:14px;padding:18px 28px;width:100%">
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:700">Tiempo restante</div>
+    <div style="font-family:'Plus Jakarta Sans';font-size:42px;font-weight:800;color:var(--red2)" id="countdown">24:00:00</div>
+  </div>
+  <div style="background:var(--greenbg);border:1px solid var(--greenborder);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--green);line-height:1.7;width:100%">✅ Podés acumular puntos ya mismo<br>🔒 Los canjes se habilitan al verificar</div>
+  <button class="btn btn-red" style="width:100%;max-width:280px" onclick="goHome()">Ir a mi cuenta →</button>
+</div>
+
+<div id="s-home" class="scr">
+  <div class="hdr">
+    <div class="hdr-row">
+      <div><div class="hdr-greet">Bienvenido de vuelta</div><div class="hdr-name" id="hh-name">—</div></div>
+      <div class="hdr-av" id="hh-av">?</div>
+    </div>
+  </div>
+  <div id="pend-ban" class="pend-ban">⏳ <span>Cuenta en verificación — podés acumular, los canjes se habilitan pronto</span></div>
+  <div class="pts-hero">
+    <div class="pts-lbl">Mis puntos Zuno</div>
+    <div class="pts-num" id="h-pts">0</div>
+    <div class="pts-eq">Equivale a <span class="v" id="h-eq">$0.00</span> en descuentos</div>
+    <div class="prog-lbl"><span id="h-tier">🥉 Bronce</span><span id="h-next-lbl">Siguiente: Plata</span></div>
+    <div class="prog-t"><div class="prog-f" id="h-bar" style="width:0%"></div></div>
+    <div class="prog-n">Faltan <span id="h-need">500</span> pts para subir de nivel</div>
+  </div>
+  <div class="qa-row">
+    <div class="qa" onclick="goTo('qr')"><span class="qa-ic">📱</span><div class="qa-lbl">Mi código QR</div></div>
+    <div class="qa" onclick="goRw()"><span class="qa-ic">🎁</span><div class="qa-lbl">Mis premios</div></div>
+  </div>
+  <div class="sec-t">Últimos movimientos</div>
+  <div class="hist" id="h-hist"></div>
+</div>
+
+<div id="s-qr" class="scr" style="align-items:center;padding:28px 22px">
+  <div class="pg-hdr"><div class="back" onclick="goTo('home')">←</div><h2>Mi código QR</h2></div>
+  <div class="qr-frame">
+    <div class="qr-c tl"></div><div class="qr-c tr"></div>
+    <div class="qr-c bl"></div><div class="qr-c br"></div>
+    <div class="beam"></div>
+    <div class="qr-in"><span class="qr-em">⛽</span><div class="qr-cs" id="qr-sm">—</div></div>
+  </div>
+  <div class="qr-card card">
+    <div class="lbl">Tu código único — mostralo al cajero</div>
+    <div class="qr-big" id="qr-big">—</div>
+    <div class="qr-hint">El cajero ingresa este código para acreditarte puntos</div>
+  </div>
+</div>
+
+<div id="s-rewards" class="scr">
+  <div class="rw-hdr"><h1>Mis premios 🎁</h1><p id="rw-sub">Canjea tus puntos en cualquier gasolinera</p></div>
+  <div class="pts-chip"><span class="lbl">Puntos disponibles</span><span class="val" id="r-pts">0 PTS</span></div>
+  <div class="lock-note" id="lock-note">🔒 Los canjes se habilitan cuando el admin verifique tu cuenta.</div>
+  <div class="rw-list" id="rw-list"></div>
+</div>
+
+<div id="s-profile" class="scr">
+  <div class="prof-hd">
+    <div class="prof-av" id="p-av">?</div>
+    <div class="prof-name" id="p-name">—</div>
+    <div class="prof-dui" id="p-dui">DUI: —</div>
+    <div class="prof-phone" id="p-phone">—</div>
+    <div><span class="tier-tag" id="p-tier">🥉 Bronce</span><span class="verif-tag pend" id="p-verif">⏳ Pendiente</span></div>
+  </div>
+  <div class="stats3">
+    <div class="sb"><div class="sb-v" id="ps-pts">0</div><div class="sb-l">Puntos</div></div>
+    <div class="sb"><div class="sb-v" id="ps-vis">0</div><div class="sb-l">Visitas</div></div>
+    <div class="sb"><div class="sb-v" id="ps-sav">$0</div><div class="sb-l">Ahorrado</div></div>
+  </div>
+  <div class="menu">
+    <div class="mi"><span class="mi-ic">🏆</span><span class="mi-tx">Historial completo</span><span class="mi-ar">›</span></div>
+    <div class="mi"><span class="mi-ic">❓</span><span class="mi-tx">Ayuda y soporte</span><span class="mi-ar">›</span></div>
+  </div>
+  <button class="logout" onclick="doLogout()">Cerrar sesión</button>
+</div>
+
+<div class="bnav" id="bnav">
+  <div class="bn on" id="bn-home" onclick="goTo('home')"><div class="bni">🏠</div>Inicio</div>
+  <div class="bn" id="bn-qr" onclick="goTo('qr')"><div class="bni">📱</div>Mi QR</div>
+  <div class="bn" id="bn-rewards" onclick="goRw()"><div class="bni">🎁</div>Premios</div>
+  <div class="bn" id="bn-profile" onclick="goTo('profile')"><div class="bni">👤</div>Perfil</div>
+</div>
+
+<div class="mov" id="m-rw">
+  <div class="modal">
+    <h3 id="mrw-t">—</h3>
+    <p id="mrw-d">—</p>
+    <!-- Estado: confirmar -->
+    <div id="otp-confirm">
+      <div style="background:var(--redbg);border:1px solid var(--redborder);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--red3);margin-bottom:16px;line-height:1.6">⚠️ Se generará un código OTP válido por <strong>5 minutos</strong>. Mostráselo al cajero para completar el canje.</div>
+      <button class="btn btn-red" id="otp-gen-btn" onclick="genOTP()">Generar código OTP →</button>
+      <button class="btn btn-ghost" onclick="closeM('m-rw')">Cancelar</button>
+    </div>
+    <!-- Estado: código generado -->
+    <div id="otp-show" style="display:none;text-align:center">
+      <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:12px">Tu código OTP</div>
+      <div style="font-family:'Plus Jakarta Sans';font-size:64px;letter-spacing:10px;color:var(--red2);line-height:1;margin-bottom:8px" id="otp-code">——</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:16px">Mostráselo al cajero ahora mismo</div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px">Expira en</div>
+        <div style="font-family:'Plus Jakarta Sans';font-size:36px;letter-spacing:.5px" id="otp-timer">05:00</div>
+      </div>
+      <div style="background:var(--greenbg);border:1px solid var(--greenborder);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--green);line-height:1.6">✅ El cajero ingresa este código en su panel para completar el canje</div>
+      <button class="btn btn-ghost" style="margin-top:14px" onclick="cancelOTP()">Cancelar canje</button>
+    </div>
+    <!-- Estado: expirado -->
+    <div id="otp-expired" style="display:none;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">⏰</div>
+      <div style="font-family:'Plus Jakarta Sans';font-size:24px;letter-spacing:1px;margin-bottom:8px">Código expirado</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">El código de 5 minutos venció. Generá uno nuevo.</div>
+      <button class="btn btn-red" onclick="genOTP()">Generar nuevo código →</button>
+      <button class="btn btn-ghost" onclick="closeM('m-rw')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading" id="loading"><div class="spinner"></div><p id="loading-txt">Cargando...</p></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyAqXjnH6WrXuEQivE3RGwvav1qyFOOyoeY",
+  authDomain:"zuno-1285e.firebaseapp.com",
+  projectId:"zuno-1285e",
+  storageBucket:"zuno-1285e.firebasestorage.app",
+  messagingSenderId:"234427184784",
+  appId:"1:234427184784:web:1bdb29f6f2a1f4e85b4a15"
+});
+const db = getFirestore(app);
+
+const TIERS=[{n:'🥉 Bronce',min:0,max:499},{n:'🥈 Plata',min:500,max:1499},{n:'🥇 Oro',min:1500,max:2999},{n:'💎 Diamante',min:3000,max:99999}];
+const COLS=['#e02020','#22c55e','#3b82f6','#f59e0b','#a855f7'];
+const gT=p=>TIERS.find(t=>p>=t.min&&p<=t.max)||TIERS[0];
+const uC=id=>COLS[Math.abs([...id].reduce((a,c)=>a+c.charCodeAt(0),0))%COLS.length];
+const uI=n=>n.charAt(0).toUpperCase();
+const fD=()=>new Date().toLocaleDateString('es-SV');
+
+const DEFAULT_REWARDS=[
+  {id:'r1',name:'$1 de descuento',desc:'En tu próxima carga de combustible',cost:50,icon:'💵'},
+  {id:'r2',name:'Lavado de auto',desc:'Lavado básico gratis',cost:200,icon:'🚗'},
+  {id:'r3',name:'$3 en tienda',desc:'Válido en tienda de conveniencia',cost:150,icon:'🏪'},
+  {id:'r4',name:'$5 en combustible',desc:'Descuento directo en próxima carga',cost:250,icon:'⛽'},
+  {id:'r5',name:'Tanque lleno 10% off',desc:'10% de descuento en carga completa',cost:500,icon:'🏆'},
+];
+
+let CU=null, cI=null;
+const load=(s,t='Cargando...')=>{const el=document.getElementById('loading');if(!el)return;if(s){el.style.display='flex';const txt=document.getElementById('load-txt');if(txt)txt.textContent=t;}else{el.style.display='none';}}
+const toast=(msg,type='')=>{const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');setTimeout(()=>t.className='toast',3000);}
+const showS=id=>{document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById('s-'+id).classList.add('on');}
+const showNav=()=>document.getElementById('bnav').classList.add('show');
+
+async function getRewards(){
+  try{const s=await getDoc(doc(db,'config','rewards'));return s.exists()?s.data().list:DEFAULT_REWARDS;}
+  catch{return DEFAULT_REWARDS;}
+}
+
+window.setTab=t=>{
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',(i===0&&t==='login')||(i===1&&t==='register')));
+  document.getElementById('lt-login').style.display=t==='login'?'':'none';
+  document.getElementById('lt-reg').style.display=t==='register'?'':'none';
+}
+
+window.doLogin=async()=>{
+  const phone=document.getElementById('l-phone').value.trim();
+  const pass=document.getElementById('l-pass').value;
+  if(!phone||!pass){toast('Completá todos los campos','err');return;}
+  load(true,'Verificando...');
+  try{
+    const q=query(collection(db,'users'),where('phone','==',phone),where('pass','==',pass),where('role','==','client'));
+    const snap=await getDocs(q);
+    if(snap.empty){toast('Datos incorrectos ❌','err');load(false);return;}
+    CU={id:snap.docs[0].id,...snap.docs[0].data()};load(false);
+    if(!CU.verified&&(Date.now()-CU.registeredAt)<86400000){showS('pending');startC(CU.registeredAt);}
+    else{if(!CU.verified){await updateDoc(doc(db,'users',CU.id),{verified:true});CU.verified=true;}showNav();goTo('home');}
+  }catch(e){toast('Error de conexión','err');load(false);}
+}
+
+window.doRegister=async()=>{
+  const name=document.getElementById('r-name').value.trim();
+  const dui=document.getElementById('r-dui').value.trim();
+  const phone=document.getElementById('r-phone').value.trim();
+  const pass=document.getElementById('r-pass').value;
+  if(!name||!dui||!phone||!pass){toast('Completá todos los campos','err');return;}
+  if(dui.length!==9||isNaN(dui)){toast('DUI inválido — 9 dígitos sin guión','err');return;}
+  load(true,'Creando cuenta...');
+  try{
+    const [sp,sd]=await Promise.all([
+      getDocs(query(collection(db,'users'),where('phone','==',phone))),
+      getDocs(query(collection(db,'users'),where('dui','==',dui)))
+    ]);
+    if(!sp.empty){toast('Teléfono ya registrado','err');load(false);return;}
+    if(!sd.empty){toast('DUI ya registrado','err');load(false);return;}
+    const all=await getDocs(query(collection(db,'users'),where('role','==','client')));
+    const code='ZN-'+(String(all.size+1).padStart(3,'0'));
+    const nu={name,dui,phone,pass,code,points:0,visits:0,saved:0,role:'client',verified:false,registeredAt:Date.now(),history:[]};
+    const ref=await addDoc(collection(db,'users'),nu);
+    CU={id:ref.id,...nu};load(false);
+    showS('pending');startC(nu.registeredAt);
+    toast('¡Registro exitoso! 🎉','ok');
+  }catch(e){toast('Error al registrar. Intentá de nuevo.','err');load(false);}
+}
+
+function startC(reg){
+  if(cI)clearInterval(cI);
+  const upd=()=>{
+    const rem=Math.max(0,86400000-(Date.now()-reg));
+    const h=Math.floor(rem/3600000),m=Math.floor((rem%3600000)/60000),s=Math.floor((rem%60000)/1000);
+    const cd=document.getElementById('countdown');
+    if(cd)cd.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if(rem===0){clearInterval(cI);updateDoc(doc(db,'users',CU.id),{verified:true});CU.verified=true;toast('¡Cuenta verificada! Ya podés canjear 🎉','ok');showNav();goTo('home');}
+  };
+  upd();cI=setInterval(upd,1000);
+}
+
+window.goHome=()=>{showNav();goTo('home');}
+window.doLogout=()=>{CU=null;if(cI)clearInterval(cI);document.getElementById('bnav').classList.remove('show');showS('login');}
+window.closeM=id=>document.getElementById(id).classList.remove('open');
+
+window.goTo=async id=>{
+  showS(id);
+  document.querySelectorAll('.bn').forEach(b=>b.classList.remove('on'));
+  const nb=document.getElementById('bn-'+id);if(nb)nb.classList.add('on');
+  if(id==='home')await rHome();
+  if(id==='qr')rQR();
+  if(id==='profile')await rProf();
+}
+
+window.goRw=async()=>{
+  showS('rewards');
+  document.querySelectorAll('.bn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('bn-rewards').classList.add('on');
+  await rRw();
+}
+
+async function rHome(){
+  load(true);
+  try{
+    const snap=await getDoc(doc(db,'users',CU.id));
+    if(snap.exists())CU={id:CU.id,...snap.data()};
+    document.getElementById('hh-name').textContent=CU.name.split(' ')[0];
+    document.getElementById('hh-av').textContent=uI(CU.name);
+    document.getElementById('hh-av').style.background=uC(CU.id);
+    document.getElementById('h-pts').textContent=CU.points.toLocaleString();
+    document.getElementById('h-eq').textContent='$'+(CU.points).toFixed(2);
+    document.getElementById('pend-ban').style.display=CU.verified?'none':'flex';
+    const tier=gT(CU.points),next=TIERS[TIERS.indexOf(tier)+1];
+    document.getElementById('h-tier').textContent=tier.n;
+    if(next){const pct=((CU.points-tier.min)/(next.min-tier.min))*100;document.getElementById('h-bar').style.width=Math.min(pct,100)+'%';document.getElementById('h-next-lbl').textContent='Siguiente: '+next.n;document.getElementById('h-need').textContent=(next.min-CU.points).toLocaleString();}
+    else{document.getElementById('h-bar').style.width='100%';document.getElementById('h-next-lbl').textContent='¡Nivel máximo! 💎';document.getElementById('h-need').textContent='0';}
+    const hist=document.getElementById('h-hist');
+    const history=CU.history||[];
+    if(!history.length){hist.innerHTML='<div style="text-align:center;color:var(--text3);padding:32px;font-size:14px;line-height:1.7">Visitá una gasolinera<br>para empezar a acumular 🚗</div>';}
+    else{hist.innerHTML=[...history].reverse().slice(0,6).map((h,i)=>`<div class="hi" style="animation-delay:${i*.05}s"><div class="hi-ic" style="background:${h.earn?'rgba(224,32,32,.1)':'rgba(34,197,94,.1)'}">${h.earn?'⛽':'🎁'}</div><div class="hi-info"><div class="hi-name">${h.name}</div><div class="hi-date">${h.date}</div></div><div class="hi-pts ${h.earn?'earn':'spend'}">${h.earn?'+':'-'}${h.pts}</div></div>`).join('');}
+    load(false);
+  }catch(e){load(false);}
+}
+
+function rQR(){document.getElementById('qr-sm').textContent=CU.code;document.getElementById('qr-big').textContent=CU.code;}
+
+async function rRw(){
+  load(true,'Cargando premios...');
+  try{
+    const snap=await getDoc(doc(db,'users',CU.id));
+    if(snap.exists())CU={id:CU.id,...snap.data()};
+    const rewards=await getRewards();
+    document.getElementById('r-pts').textContent=CU.points.toLocaleString()+' PTS';
+    const locked=!CU.verified;
+    document.getElementById('lock-note').style.display=locked?'block':'none';
+    document.getElementById('rw-sub').textContent=locked?'Verificá tu cuenta para canjear':'Canjea tus puntos en cualquier gasolinera';
+    document.getElementById('rw-list').innerHTML=rewards.map(r=>{
+      const hp=CU.points>=r.cost,can=hp&&!locked;
+      return `<div class="rw ${can?'avail':''}"><div class="rw-ic">${r.icon}</div><div class="rw-info"><div class="rw-name">${r.name}</div><div class="rw-desc">${r.desc}</div><div class="rw-cost">⭐ ${r.cost} pts</div></div><button class="rw-btn ${can?'can':locked&&hp?'lock':'no'}" onclick="${can?`window.oRw('${r.id}')`:'void(0)'}">
+        ${can?'Canjear':locked&&hp?'🔒 Pendiente':'Faltan '+(r.cost-CU.points)+' pts'}</button></div>`;
+    }).join('');
+    load(false);
+  }catch(e){load(false);}
+}
+
+async function rProf(){
+  const snap=await getDoc(doc(db,'users',CU.id));
+  if(snap.exists())CU={id:CU.id,...snap.data()};
+  document.getElementById('p-av').textContent=uI(CU.name);
+  document.getElementById('p-av').style.background=uC(CU.id);
+  document.getElementById('p-name').textContent=CU.name;
+  document.getElementById('p-dui').textContent='DUI: '+CU.dui;
+  document.getElementById('p-phone').textContent='📱 '+CU.phone;
+  document.getElementById('p-tier').textContent=gT(CU.points).n;
+  const pv=document.getElementById('p-verif');pv.className='verif-tag '+(CU.verified?'ok':'pend');pv.textContent=CU.verified?'✅ Verificado':'⏳ Pendiente';
+  document.getElementById('ps-pts').textContent=CU.points.toLocaleString();
+  document.getElementById('ps-vis').textContent=CU.visits;
+  document.getElementById('ps-sav').textContent='$'+(CU.saved||0).toFixed(2);
+}
+
+let otpRwId=null, otpInterval=null;
+
+window.oRw=id=>{
+  const rewards=DEFAULT_REWARDS;
+  const r=rewards.find(x=>x.id===id);if(!r)return;
+  otpRwId=id;
+  document.getElementById('mrw-t').textContent=r.icon+' '+r.name;
+  document.getElementById('mrw-d').textContent=r.desc+' — '+r.cost+' puntos';
+  // Reset estados
+  document.getElementById('otp-confirm').style.display='';
+  document.getElementById('otp-show').style.display='none';
+  document.getElementById('otp-expired').style.display='none';
+  document.getElementById('m-rw').classList.add('open');
+}
+
+window.genOTP=async()=>{
+  if(!otpRwId||!CU)return;
+  const rewards=DEFAULT_REWARDS;
+  const r=rewards.find(x=>x.id===otpRwId);if(!r)return;
+  // Generar código 6 dígitos
+  const code=String(Math.floor(100000+Math.random()*900000));
+  const exp=Date.now()+(5*60*1000); // 5 minutos
+  load(true,'Generando código...');
+  try{
+    // Guardar OTP en Firebase
+    await setDoc(doc(db,'otps',code),{
+      userId:CU.id, userName:CU.name,
+      rewardId:r.id, rewardName:r.name,
+      rewardCost:r.cost, createdAt:Date.now(),
+      expiresAt:exp, used:false
+    });
+    load(false);
+    document.getElementById('otp-code').textContent=code;
+    document.getElementById('otp-confirm').style.display='none';
+    document.getElementById('otp-show').style.display='';
+    document.getElementById('otp-expired').style.display='none';
+    // Countdown
+    if(otpInterval)clearInterval(otpInterval);
+    otpInterval=setInterval(()=>{
+      const rem=Math.max(0,exp-Date.now());
+      const m=Math.floor(rem/60000),s=Math.floor((rem%60000)/1000);
+      const timer=document.getElementById('otp-timer');
+      if(timer)timer.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+      if(rem===0){
+        clearInterval(otpInterval);
+        document.getElementById('otp-show').style.display='none';
+        document.getElementById('otp-expired').style.display='';
+      }
+    },1000);
+  }catch(e){toast('Error al generar código','err');load(false);}
+}
+
+window.cancelOTP=()=>{
+  if(otpInterval)clearInterval(otpInterval);
+  closeM('m-rw');
+}
+
+document.querySelectorAll('.mov').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open')}));
+</script>
+</body>
+</html>

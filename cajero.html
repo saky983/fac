@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zuno – Cajero</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  // Inicializar EmailJS — reemplazá 'TU_PUBLIC_KEY' con tu clave de emailjs.com
+  (function(){try{emailjs.init({publicKey:'7QiuugAX4ZMJ3sFDN'});}catch(e){}})();
+</script>
+<style>
+:root{--bg:#0a0a0a;--s1:#111;--s2:#1a1a1a;--s3:#222;--border:#2a2a2a;--red:#e02020;--red2:#ff3333;--red3:#ff6666;--redbg:rgba(224,32,32,0.08);--redborder:rgba(224,32,32,0.25);--green:#22c55e;--greenbg:rgba(34,197,94,0.08);--greenborder:rgba(34,197,94,0.25);--text:#f5f5f5;--text2:#a0a0a0;--text3:#555}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden;padding-bottom:40px}
+body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(34,197,94,0.08),transparent 70%);pointer-events:none;z-index:0}
+.scr{display:none;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+.scr.on{display:flex;animation:scrIn .3s ease}
+@keyframes scrIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px}
+.field input,.field select{width:100%;padding:14px 16px;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+.field input:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,0.1)}
+.field input::placeholder{color:var(--text3)}
+.field select option{background:#1a1a1a}
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:10px;font-family:'Plus Jakarta Sans';font-size:18px;letter-spacing:.3px;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn:active{transform:scale(.98)}
+.btn-green{background:linear-gradient(135deg,var(--green),#16a34a);color:#000;box-shadow:0 4px 20px rgba(34,197,94,0.3)}
+.btn-green:hover{box-shadow:0 6px 28px rgba(34,197,94,0.5);transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text2);margin-top:8px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--s2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:9998;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red2);color:var(--red2)}
+.loading{display:none;position:absolute;inset:0;background:rgba(255,255,255,0);align-items:center;justify-content:center;flex-direction:column;gap:10px;border-radius:12px;z-index:10}.loading.show{display:flex}
+.spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:14px;color:var(--text2)}
+.succ-scr{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:32px}
+.succ-scr.show{display:flex;animation:scrIn .4s ease}
+.succ-ring{width:110px;height:110px;border-radius:50%;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:50px;box-shadow:0 0 40px rgba(34,197,94,0.3);animation:gp 2s ease-in-out infinite}
+@keyframes gp{0%,100%{box-shadow:0 0 40px rgba(34,197,94,.3)}50%{box-shadow:0 0 60px rgba(34,197,94,.5)}}
+.succ-title{font-family:'Plus Jakarta Sans';font-size:36px;letter-spacing:.5px}
+.succ-big{font-family:'Plus Jakarta Sans';font-size:60px;letter-spacing:.5px;color:var(--green);line-height:1}
+.succ-sub{color:var(--text2);font-size:14px;max-width:280px;line-height:1.7}
+#s-login{justify-content:center;align-items:center;padding:40px 28px;gap:4px;background:linear-gradient(180deg,#030a03,var(--bg) 50%)}
+.logo-icon{width:80px;height:80px;border-radius:20px;margin:0 auto 16px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 8px 32px rgba(34,197,94,0.4);animation:gp 3s ease-in-out infinite}
+.logo-name{font-family:'Plus Jakarta Sans';font-size:36px;font-weight:800;text-align:center}
+.logo-sub{font-size:13px;color:var(--text3);text-align:center;margin-top:4px;margin-bottom:32px}
+.login-box{width:100%;background:var(--s1);border:1px solid var(--border);border-top:2px solid var(--green);border-radius:16px;padding:24px}
+#s-main{padding:0 0 20px}
+.topbar{background:linear-gradient(160deg,#030a03,var(--bg));padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:relative}
+.topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.topbar h1{font-family:'Plus Jakarta Sans';font-size:22px;letter-spacing:1px;color:var(--green)}
+.topbar .stn{font-size:12px;color:var(--text3);margin-top:3px}
+.out-btn{padding:8px 14px;background:var(--redbg);border:1px solid var(--redborder);border-radius:8px;color:var(--red3);font-size:12px;font-weight:700;cursor:pointer}
+.search-box{padding:20px 22px 0}
+.search-box label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px}
+.search-row{display:flex;gap:10px}
+.search-row input{flex:1;padding:14px 16px;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+.search-row input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.1)}
+.search-row input::placeholder{color:var(--text3)}
+.search-row button{padding:14px 18px;background:var(--green);border:none;border-radius:10px;color:#000;font-size:18px;cursor:pointer}
+.not-found{margin:14px 22px 0;background:var(--redbg);border:1px solid var(--redborder);border-radius:12px;padding:14px 16px;display:none;text-align:center;color:var(--red3);font-size:14px}
+.client-card{margin:14px 22px 0;background:var(--s1);border:1.5px solid var(--greenborder);border-radius:16px;padding:20px;display:none;animation:scrIn .3s ease;position:relative;overflow:hidden}
+.client-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.cc-top{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.cc-av{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-size:24px;color:#fff;flex-shrink:0}
+.cc-info{flex:1}
+.cc-name{font-family:'Plus Jakarta Sans';font-size:20px;letter-spacing:.5px}
+.cc-pts{color:var(--green);font-size:14px;font-weight:700;margin-top:2px}
+.cc-status{font-size:12px;margin-top:2px}
+.cc-code-box{text-align:right}
+.cc-code-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.cc-code-val{font-family:'Plus Jakarta Sans';font-size:22px;letter-spacing:.5px}
+.amt-section{margin-bottom:16px}
+.amt-section label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:10px}
+.amt-input{display:flex;align-items:center;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.amt-input:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.1)}
+.amt-prefix{padding:0 14px;font-family:'Plus Jakarta Sans';font-size:24px;color:var(--green)}
+.amt-input input{flex:1;padding:14px 8px;background:transparent;border:none;color:var(--text);font-family:'Plus Jakarta Sans';font-size:30px;letter-spacing:1px;outline:none;text-align:center}
+.pts-prev{text-align:center;padding:16px;background:var(--greenbg);border:1px solid var(--greenborder);border-radius:12px;margin:12px 0}
+.pp-num{font-family:'Plus Jakarta Sans';font-size:36px;font-weight:800;color:var(--green);line-height:1}
+.pp-lbl{font-size:12px;color:var(--text3);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.rw-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+.rw-section h4{font-family:'Plus Jakarta Sans';font-size:18px;letter-spacing:1px;margin-bottom:14px;color:var(--green)}
+.rm-list{display:flex;flex-direction:column;gap:8px}
+.rm-item{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:border-color .2s}
+.rm-item:hover{border-color:var(--green)}
+.rm-ic{font-size:22px;flex-shrink:0}
+.rm-info{flex:1}.rm-name{font-weight:700;font-size:14px}.rm-cost{font-size:12px;color:var(--green);font-weight:600;margin-top:2px}
+.rm-btn{padding:9px 16px;border-radius:8px;border:1px solid var(--greenborder);font-family:'Plus Jakarta Sans';font-size:13px;font-weight:700;cursor:pointer;background:var(--greenbg);color:var(--green);transition:all .2s}
+.rm-btn:hover{background:rgba(34,197,94,.2)}
+.stats-section{padding:20px 22px 0}
+.stats-t{font-family:'Plus Jakarta Sans';font-size:20px;letter-spacing:1px;color:var(--text2);margin-bottom:14px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px}
+.sc-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:700}
+.sc-val{font-family:'Plus Jakarta Sans';font-size:30px;letter-spacing:1px}
+
+/* Respuesta instantánea */
+button,.btn,.ntab,.qa,.card,.mi,.rm-btn,.btn-sm,.tab,.bn,.back,.out-btn{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:active,.btn:active,.ntab:active,.qa:active,.card:active,.btn-sm:active{transform:scale(.97);opacity:.85;transition:transform .08s,opacity .08s}
+.btn-p:active,.btn-green:active,.btn-b:active{transform:scale(.97)!important}
+/* Letter spacing ajustado para Plus Jakarta Sans */
+.logo-name,.succ-title,.succ-big,.pg-hdr h2,.pts-num,.qr-big,.cc-name,.topbar h1,.sc-val,.pp-num{letter-spacing:.5px!important}
+.btn,.btn-p,.btn-b,.btn-g,.btn-green{letter-spacing:.3px!important;font-weight:700}
+</style>
+</head>
+<body>
+
+<div id="s-login" class="scr on">
+  <div class="logo-icon">🏪</div>
+  <div class="logo-name">ZUNO</div>
+  <div class="logo-sub">Panel de Cajero · Gasolineras 🇸🇻</div>
+  <div class="login-box">
+    <div class="field"><label>Usuario cajero</label><input type="text" id="l-user" placeholder="cajero1"></div>
+    <div class="field"><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••"></div>
+    <div class="field">
+      <label>Gasolinera</label>
+      <select id="l-stn"></select>
+    </div>
+    <button class="btn btn-green" onclick="doLogin()">Entrar al panel →</button>
+  </div>
+</div>
+
+<div id="s-main" class="scr">
+  <div class="topbar">
+    <div><h1>🏪 Panel Cajero · Zuno</h1><div class="stn" id="stn-name">—</div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button style="padding:7px 12px;background:var(--greenbg);border:1px solid var(--greenborder);border-radius:8px;color:var(--green);font-size:11px;font-weight:700;cursor:pointer" onclick="abrirCierre()">🏁 Cierre</button>
+      <button class="out-btn" onclick="doLogout()">Salir 🚪</button>
+    </div>
+  </div>
+  <div class="search-box">
+    <label>Buscar cliente por código ZN o teléfono</label>
+    <div class="search-row">
+      <input type="text" id="s-inp" placeholder="ZN-001 o 7000-0001" oninput="searchC()" autocomplete="off">
+      <button onclick="searchC()">🔍</button>
+    </div>
+  </div>
+  <div class="not-found" id="not-found">❌ Cliente no encontrado. Verificá el código o teléfono.</div>
+  <div class="client-card" id="cc">
+    <div class="cc-top">
+      <div class="cc-av" id="cc-av">?</div>
+      <div class="cc-info">
+        <div class="cc-name" id="cc-name">—</div>
+        <div class="cc-pts" id="cc-pts">—</div>
+        <div class="cc-status" id="cc-status">—</div>
+      </div>
+      <div class="cc-code-box">
+        <div class="cc-code-lbl">Código</div>
+        <div class="cc-code-val" id="cc-code">—</div>
+      </div>
+    </div>
+    <div class="amt-section">
+      <label>Monto de la venta en USD</label>
+      <div class="amt-input">
+        <span class="amt-prefix">$</span>
+        <input type="number" id="amt" placeholder="0.00" min="1" step="0.01" oninput="updP()">
+      </div>
+    </div>
+    <div class="pts-prev">
+      <div class="pp-num" id="pp-num">+0 pts</div>
+      <div class="pp-lbl">se acreditarán al cliente</div>
+    </div>
+    <button class="btn btn-green" onclick="credit()">✓ Acreditar puntos</button>
+    <div class="rw-section" id="rw-sec" style="display:none">
+      <h4>🎁 Validar canje con OTP</h4>
+      <div style="background:var(--s2);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;transition:border-color .2s" id="otp-input-wrap">
+        <div style="padding:10px 14px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700;border-bottom:1px solid var(--border)">Código OTP del cliente</div>
+        <div style="display:flex;align-items:center">
+          <input type="text" id="otp-inp" placeholder="000000" maxlength="6" inputmode="numeric"
+            style="flex:1;padding:16px;background:transparent;border:none;color:var(--text);font-family:'Plus Jakarta Sans';font-size:32px;letter-spacing:.5px;outline:none;text-align:center"
+            oninput="this.value=this.value.replace(/[^0-9]/g,'');otpCheck()">
+        </div>
+      </div>
+      <div id="otp-status" style="display:none;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:10px;line-height:1.6"></div>
+      <button id="otp-btn" class="btn btn-green" onclick="validateOTP()" style="display:none">✓ Confirmar canje</button>
+    </div>
+  </div>
+  <div class="stats-section">
+    <div class="stats-t">Estadísticas de hoy</div>
+    <div class="stats-grid">
+      <div class="sc"><div class="sc-lbl">Clientes atendidos</div><div class="sc-val" style="color:var(--green)" id="st-cl">0</div></div>
+      <div class="sc"><div class="sc-lbl">Puntos acreditados</div><div class="sc-val" style="color:var(--red2)" id="st-pts">0</div></div>
+      <div class="sc"><div class="sc-lbl">Canjes procesados</div><div class="sc-val" style="color:#f5a623" id="st-rw">0</div></div>
+      <div class="sc"><div class="sc-lbl">Ventas del día</div><div class="sc-val" style="color:var(--green)" id="st-sales">$0</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="succ-scr" id="succ">
+  <div class="succ-ring" id="s-ic">✓</div>
+  <div class="succ-title" id="s-title">¡Listo!</div>
+  <div class="succ-big" id="s-big">—</div>
+  <div class="succ-sub" id="s-sub">—</div>
+  <button class="btn btn-green" style="width:220px;margin-top:8px" onclick="closeSucc()">Siguiente cliente →</button>
+</div>
+<!-- MODAL PIN EMPLEADO -->
+<div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(16px);z-index:300;align-items:center;justify-content:center;padding:28px" id="m-pin">
+  <div style="background:var(--s1);border:1px solid var(--border);border-top:3px solid var(--green);border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center;animation:scrIn .3s ease">
+    <div style="font-size:36px;margin-bottom:12px">🔐</div>
+    <div style="font-family:'Plus Jakarta Sans';font-size:24px;letter-spacing:1px;margin-bottom:6px">PIN de empleado</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.6">Ingresá tu PIN de 4 dígitos<br>para confirmar el canje</div>
+    <!-- Dots display -->
+    <div style="display:flex;justify-content:center;gap:14px;margin-bottom:24px" id="pin-dots">
+      <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--border);transition:all .15s" id="pd0"></div>
+      <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--border);transition:all .15s" id="pd1"></div>
+      <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--border);transition:all .15s" id="pd2"></div>
+      <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--border);transition:all .15s" id="pd3"></div>
+    </div>
+    <!-- Teclado numérico -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px" id="pin-kbd">
+      <button onclick="pinKey('1')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">1</button>
+      <button onclick="pinKey('2')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">2</button>
+      <button onclick="pinKey('3')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">3</button>
+      <button onclick="pinKey('4')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">4</button>
+      <button onclick="pinKey('5')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">5</button>
+      <button onclick="pinKey('6')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">6</button>
+      <button onclick="pinKey('7')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">7</button>
+      <button onclick="pinKey('8')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">8</button>
+      <button onclick="pinKey('9')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">9</button>
+      <button onclick="pinDel()" style="padding:18px;background:var(--redbg);border:1px solid var(--redborder);border-radius:12px;color:var(--red3);font-size:18px;cursor:pointer">⌫</button>
+      <button onclick="pinKey('0')" style="padding:18px;background:var(--s2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Plus Jakarta Sans';font-size:22px;cursor:pointer;transition:all .15s" onmousedown="this.style.background='var(--s3)'">0</button>
+      <button onclick="pinClear()" style="padding:18px;background:var(--s3);border:1px solid var(--border);border-radius:12px;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">CLR</button>
+    </div>
+    <div id="pin-error" style="display:none;background:var(--redbg);border:1px solid var(--redborder);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red3);margin-bottom:12px">❌ PIN incorrecto. Intentá de nuevo.</div>
+    <button onclick="cancelPin()" style="width:100%;padding:12px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-family:'Plus Jakarta Sans';font-size:16px;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL CIERRE DE TURNO -->
+<div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(16px);z-index:300;align-items:center;justify-content:center;padding:28px" id="m-cierre">
+  <div style="background:var(--s1);border:1px solid var(--border);border-top:3px solid var(--green);border-radius:20px;padding:28px 24px;width:100%;max-width:380px;animation:scrIn .3s ease;max-height:85vh;overflow-y:auto">
+    <div style="font-family:'Plus Jakarta Sans';font-size:26px;letter-spacing:1px;margin-bottom:4px">🏁 Cierre de turno</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px" id="cierre-fecha">—</div>
+    <!-- Resumen -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:6px">Clientes</div>
+        <div style="font-family:'Plus Jakarta Sans';font-size:32px;color:var(--green)" id="c-cl">0</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:6px">Ventas</div>
+        <div style="font-family:'Plus Jakarta Sans';font-size:32px;color:var(--green)" id="c-sales">$0</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:6px">Pts dados</div>
+        <div style="font-family:'Plus Jakarta Sans';font-size:32px;color:var(--red2)" id="c-pts">0</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:6px">Canjes</div>
+        <div style="font-family:'Plus Jakarta Sans';font-size:32px;color:#f5a623" id="c-rw">0</div>
+      </div>
+    </div>
+    <!-- Canjes del turno -->
+    <div style="margin-bottom:20px">
+      <div style="font-family:'Plus Jakarta Sans';font-size:16px;letter-spacing:1px;color:var(--text2);margin-bottom:10px">🎁 Canjes del turno</div>
+      <div id="cierre-canjes" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <!-- Email -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:8px">Enviar resumen a</div>
+      <input type="email" id="cierre-email" placeholder="correo@ejemplo.com" style="width:100%;padding:13px 16px;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;outline:none">
+    </div>
+    <div style="background:var(--greenbg);border:1px solid var(--greenborder);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--green);margin-bottom:16px;line-height:1.6">📧 El resumen se enviará vía EmailJS. Configurá tu cuenta en emailjs.com</div>
+    <button onclick="enviarCierre()" style="display:block;width:100%;padding:14px;background:linear-gradient(135deg,var(--green),#16a34a);border:none;border-radius:10px;font-family:'Plus Jakarta Sans';font-size:18px;letter-spacing:.3px;color:#000;cursor:pointer;margin-bottom:8px">📧 Enviar y cerrar turno</button>
+    <button onclick="cerrarSinEmail()" style="display:block;width:100%;padding:14px;background:transparent;border:1.5px solid var(--border);border-radius:10px;font-family:'Plus Jakarta Sans';font-size:16px;letter-spacing:1px;color:var(--text2);cursor:pointer">Cerrar sin enviar</button>
+  </div>
+</div>
+
+<div class="loading" id="loading" style="position:fixed;inset:0;background:rgba(6,6,8,.0);z-index:1;pointer-events:none"><div style="background:rgba(13,13,18,.95);border:1px solid #2a2a3e;border-radius:16px;padding:20px 32px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);pointer-events:all"><div class="spinner"></div><p id="load-txt" style="font-size:13px;font-weight:600;white-space:nowrap">Cargando...</p></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, getDocs, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyAqXjnH6WrXuEQivE3RGwvav1qyFOOyoeY",
+  authDomain:"zuno-1285e.firebaseapp.com",
+  projectId:"zuno-1285e",
+  storageBucket:"zuno-1285e.firebasestorage.app",
+  messagingSenderId:"234427184784",
+  appId:"1:234427184784:web:1bdb29f6f2a1f4e85b4a15"
+});
+const db = getFirestore(app);
+
+const COLS=['#e02020','#22c55e','#3b82f6','#f59e0b','#a855f7'];
+const uC=id=>COLS[Math.abs([...id].reduce((a,c)=>a+c.charCodeAt(0),0))%COLS.length];
+const uI=n=>n.charAt(0).toUpperCase();
+const fD=()=>new Date().toLocaleDateString('es-SV');
+const load=(s,t='Cargando...')=>{const el=document.getElementById('loading');if(!el)return;if(s){el.style.display='flex';const txt=document.getElementById('load-txt');if(txt)txt.textContent=t;}else{el.style.display='none';}}
+const toast=(msg,type='')=>{const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');setTimeout(()=>t.className='toast',3000);}
+
+const DEFAULT_REWARDS=[
+  {id:'r1',name:'$1 de descuento',desc:'En próxima carga',cost:50,icon:'💵'},
+  {id:'r2',name:'Lavado de auto',desc:'Lavado básico gratis',cost:200,icon:'🚗'},
+  {id:'r3',name:'$3 en tienda',desc:'Tienda de conveniencia',cost:150,icon:'🏪'},
+  {id:'r4',name:'$5 en combustible',desc:'Descuento próxima carga',cost:250,icon:'⛽'},
+  {id:'r5',name:'Tanque lleno 10% off',desc:'10% en carga completa',cost:500,icon:'🏆'},
+];
+
+// cajero1/caja = usuario de prueba siempre activo
+const DEFAULT_CASHIER={u:'cajero1',p:'caja'};
+let SS=null,FC=null,TODAY={cl:0,pts:0,rw:0,sales:0,canjes:[]};
+let PIN_INPUT='', PIN_OTP_DATA=null; // Para el flujo OTP→PIN
+
+// Load stations
+async function loadStations(){
+  try{
+    const snap=await getDoc(doc(db,'config','stations'));
+    if(snap.exists()){
+      const sel=document.getElementById('l-stn');
+      sel.innerHTML=snap.data().list.map(s=>`<option value="${s.id}">${s.name}${s.multiplier>1?' (×'+s.multiplier+' pts)':''}</option>`).join('');
+    } else {
+      // Default stations
+      const defaults=[
+        {id:'s1',name:'Zuno – San Salvador Centro',addr:'Av. España',multiplier:1},
+        {id:'s2',name:'Zuno – Santa Tecla',addr:'Blvd. Merliot',multiplier:1.5},
+        {id:'s3',name:'Zuno – Soyapango',addr:'Calle Antigua',multiplier:1},
+        {id:'s4',name:'Zuno – San Miguel',addr:'Carretera Panamericana',multiplier:1},
+      ];
+      await setDoc(doc(db,'config','stations'),{list:defaults});
+      document.getElementById('l-stn').innerHTML=defaults.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    }
+  }catch(e){
+    document.getElementById('l-stn').innerHTML='<option value="s1">Zuno – San Salvador</option>';
+  }
+}
+loadStations();
+
+window.doLogin=async()=>{
+  const u=document.getElementById('l-user').value.trim();
+  const p=document.getElementById('l-pass').value;
+  load(true,'Verificando...');
+  try{
+    // Verificar cajero: primero en Firebase, luego usuario de prueba
+    let cajeroOk=false;
+    let cajeroData=null;
+    try{
+      const cSnap=await getDoc(doc(db,'config','cajeros'));
+      if(cSnap.exists()){
+        const found=cSnap.data().list.find(c=>c.user===u&&c.pass===p);
+        if(found){cajeroOk=true;cajeroData=found;}
+      }
+    }catch{}
+    // Usuario de prueba siempre activo
+    if(!cajeroOk&&u===DEFAULT_CASHIER.u&&p===DEFAULT_CASHIER.p){cajeroOk=true;}
+    if(!cajeroOk){toast('Credenciales incorrectas ❌','err');load(false);return;}
+    const sid=cajeroData?cajeroData.stationId:document.getElementById('l-stn').value;
+    const snap=await getDoc(doc(db,'config','stations'));
+    const stations=snap.exists()?snap.data().list:[];
+    const stnData=stations.find(s=>s.id===sid)||{id:sid,name:'Gasolinera Zuno',multiplier:1};
+    SS={...stnData, cajeroName:cajeroData?cajeroData.name:u, cajeroEmail:cajeroData?cajeroData.email||'':''};
+    document.getElementById('stn-name').textContent='⛽ '+SS.name+' · '+SS.cajeroName;
+    load(false);
+    document.getElementById('s-login').classList.remove('on');
+    document.getElementById('s-main').classList.add('on');
+  }catch(e){toast('Error de conexión','err');load(false);}
+}
+
+window.doLogout=()=>{
+  document.getElementById('s-main').classList.remove('on');
+  document.getElementById('s-login').classList.add('on');
+  document.getElementById('s-inp').value='';
+  document.getElementById('cc').style.display='none';
+  document.getElementById('not-found').style.display='none';
+  FC=null;
+}
+
+window.searchC=async()=>{
+  const q=document.getElementById('s-inp').value.trim();
+  if(!q){document.getElementById('cc').style.display='none';document.getElementById('not-found').style.display='none';return;}
+  load(true,'Buscando...');
+  try{
+    const byCode=query(collection(db,'users'),where('code','==',q.toUpperCase()),where('role','==','client'));
+    const byPhone=query(collection(db,'users'),where('phone','==',q),where('role','==','client'));
+    const [sc,sp]=await Promise.all([getDocs(byCode),getDocs(byPhone)]);
+    const found=!sc.empty?sc.docs[0]:!sp.empty?sp.docs[0]:null;
+    load(false);
+    if(!found){document.getElementById('cc').style.display='none';document.getElementById('not-found').style.display='block';FC=null;return;}
+    document.getElementById('not-found').style.display='none';
+    FC={id:found.id,...found.data()};
+    showCC(FC);
+  }catch(e){toast('Error al buscar','err');load(false);}
+}
+
+function showCC(u){
+  document.getElementById('cc-av').textContent=uI(u.name);
+  document.getElementById('cc-av').style.background=uC(u.id);
+  document.getElementById('cc-name').textContent=u.name;
+  document.getElementById('cc-pts').textContent=u.points.toLocaleString()+' puntos';
+  const st=document.getElementById('cc-status');
+  st.textContent=u.verified?'✅ Cuenta verificada':'⏳ Verificación pendiente';
+  st.style.color=u.verified?'var(--green)':'#f5a623';
+  document.getElementById('cc-code').textContent=u.code;
+  document.getElementById('amt').value='';
+  document.getElementById('pp-num').textContent='+0 pts';
+  document.getElementById('cc').style.display='block';
+  renderRw(u);
+}
+
+window.updP=()=>{
+  const a=parseFloat(document.getElementById('amt').value)||0;
+  const pts=Math.floor(a*(SS?SS.multiplier:1));
+  document.getElementById('pp-num').textContent='+'+pts+' pts';
+}
+
+window.credit=async()=>{
+  const a=parseFloat(document.getElementById('amt').value);
+  if(!a||a<=0){toast('Ingresá el monto de la venta','err');return;}
+  if(!FC){toast('Buscá un cliente primero','err');return;}
+  load(true,'Acreditando puntos...');
+  try{
+    const pts=Math.floor(a*(SS?SS.multiplier:1));
+    const entry={earn:true,name:SS.name,pts,date:fD()};
+    await updateDoc(doc(db,'users',FC.id),{
+      points:increment(pts),
+      visits:increment(1),
+      history:arrayUnion(entry)
+    });
+    // Log transaction
+    await addDoc(collection(db,'transactions'),{
+      userId:FC.id,user:FC.name,station:SS.name,
+      pts,amount:a,type:'earn',date:fD(),ts:Date.now()
+    });
+    TODAY.cl++;TODAY.pts+=pts;TODAY.sales+=a;
+    FC.points+=pts;FC.visits+=1;
+    load(false);
+    updStats();
+    document.getElementById('cc-pts').textContent=FC.points.toLocaleString()+' puntos';
+    document.getElementById('amt').value='';
+    document.getElementById('pp-num').textContent='+0 pts';
+    renderRw(FC);
+    showSucc('⭐','¡Puntos acreditados!','+'+pts+' pts','Para '+FC.name+' · $'+a.toFixed(2));
+  }catch(e){toast('Error al acreditar. Intentá de nuevo.','err');load(false);}
+}
+
+async function getRewards(){
+  try{const s=await getDoc(doc(db,'config','rewards'));return s.exists()?s.data().list:DEFAULT_REWARDS;}
+  catch{return DEFAULT_REWARDS;}
+}
+
+function renderRw(u){
+  const sec=document.getElementById('rw-sec');
+  if(!u.verified){sec.style.display='none';return;}
+  sec.style.display='block';
+  // Limpiar OTP input
+  const inp=document.getElementById('otp-inp');
+  if(inp){inp.value='';inp.style.borderColor='';}
+  document.getElementById('otp-status').style.display='none';
+  document.getElementById('otp-btn').style.display='none';
+}
+
+window.otpCheck=()=>{
+  const v=document.getElementById('otp-inp').value;
+  const btn=document.getElementById('otp-btn');
+  const wrap=document.getElementById('otp-input-wrap');
+  if(v.length===6){
+    btn.style.display='block';
+    wrap.style.borderColor='var(--green)';
+  } else {
+    btn.style.display='none';
+    wrap.style.borderColor='var(--border)';
+  }
+  document.getElementById('otp-status').style.display='none';
+}
+
+window.validateOTP=async()=>{
+  const code=document.getElementById('otp-inp').value.trim();
+  if(code.length!==6){toast('Ingresá el código de 6 dígitos','err');return;}
+  load(true,'Validando código...');
+  try{
+    const otpSnap=await getDoc(doc(db,'otps',code));
+    const status=document.getElementById('otp-status');
+    
+    if(!otpSnap.exists()){
+      load(false);
+      status.style.display='block';
+      status.style.background='var(--redbg)';status.style.border='1px solid var(--redborder)';status.style.color='var(--red3)';
+      status.textContent='❌ Código incorrecto. Verificá con el cliente.';
+      return;
+    }
+    
+    const otp=otpSnap.data();
+    
+    if(otp.used){
+      load(false);
+      status.style.display='block';
+      status.style.background='var(--redbg)';status.style.border='1px solid var(--redborder)';status.style.color='var(--red3)';
+      status.textContent='❌ Este código ya fue utilizado.';
+      return;
+    }
+    
+    if(Date.now()>otp.expiresAt){
+      load(false);
+      status.style.display='block';
+      status.style.background='var(--redbg)';status.style.border='1px solid var(--redborder)';status.style.color='var(--red3)';
+      status.textContent='⏰ Código expirado. Pedile al cliente que genere uno nuevo.';
+      return;
+    }
+    
+    // Verificar que el cliente buscado coincide con el OTP
+    if(FC && otp.userId!==FC.id){
+      load(false);
+      status.style.display='block';
+      status.style.background='var(--redbg)';status.style.border='1px solid var(--redborder)';status.style.color='var(--red3)';
+      status.textContent='❌ Este código no pertenece al cliente buscado.';
+      return;
+    }
+    
+    // Verificar puntos suficientes
+    const clientSnap=await getDoc(doc(db,'users',otp.userId));
+    if(!clientSnap.exists()){load(false);toast('Cliente no encontrado','err');return;}
+    const clientData=clientSnap.data();
+    
+    if(clientData.points<otp.rewardCost){
+      load(false);
+      status.style.display='block';
+      status.style.background='var(--redbg)';status.style.border='1px solid var(--redborder)';status.style.color='var(--red3)';
+      status.textContent='❌ El cliente no tiene suficientes puntos.';
+      return;
+    }
+    
+    // ✅ OTP válido — guardar datos y pedir PIN de empleado
+    load(false);
+    PIN_OTP_DATA = {code, otp, clientData};
+    abrirPIN();
+  }catch(e){toast('Error al validar OTP','err');load(false);}
+}
+
+// ─── PIN EMPLEADO ─────────────────────────────────────
+function abrirPIN(){
+  PIN_INPUT='';
+  updatePinDots();
+  document.getElementById('pin-error').style.display='none';
+  document.getElementById('m-pin').style.display='flex';
+}
+
+window.pinKey=digit=>{
+  if(PIN_INPUT.length>=4)return;
+  PIN_INPUT+=digit;
+  updatePinDots();
+  if(PIN_INPUT.length===4)setTimeout(checkPIN,200);
+}
+
+window.pinDel=()=>{PIN_INPUT=PIN_INPUT.slice(0,-1);updatePinDots();}
+window.pinClear=()=>{PIN_INPUT='';updatePinDots();}
+window.cancelPin=()=>{PIN_INPUT='';PIN_OTP_DATA=null;document.getElementById('m-pin').style.display='none';}
+
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(d){d.style.background=i<PIN_INPUT.length?'var(--green)':'transparent';d.style.borderColor=i<PIN_INPUT.length?'var(--green)':'var(--border)';}
+  }
+}
+
+async function checkPIN(){
+  // Buscar PIN en Firebase
+  try{
+    const pinsSnap=await getDoc(doc(db,'config','pines'));
+    const pines=pinsSnap.exists()?pinsSnap.data().list:[];
+    const empleado=pines.find(p=>p.pin===PIN_INPUT);
+    if(!empleado){
+      document.getElementById('pin-error').style.display='block';
+      PIN_INPUT='';updatePinDots();return;
+    }
+    // PIN correcto → procesar canje
+    document.getElementById('m-pin').style.display='none';
+    document.getElementById('pin-error').style.display='none';
+    await procesarCanje(empleado);
+  }catch(e){
+    document.getElementById('pin-error').style.display='block';
+    PIN_INPUT='';updatePinDots();
+  }
+}
+
+async function procesarCanje(empleado){
+  if(!PIN_OTP_DATA)return;
+  const {code,otp,clientData}=PIN_OTP_DATA;
+  load(true,'Procesando canje...');
+  try{
+    const entry={earn:false,name:otp.rewardName,pts:otp.rewardCost,date:fD()};
+    await updateDoc(doc(db,'users',otp.userId),{
+      points:increment(-otp.rewardCost),
+      totalRedeemed:increment(otp.rewardCost),
+      history:arrayUnion(entry)
+    });
+    await updateDoc(doc(db,'otps',code),{used:true,usedAt:Date.now(),usedBy:SS?SS.name:'Cajero',empleado:empleado.nombre});
+    await addDoc(collection(db,'transactions'),{
+      userId:otp.userId,user:otp.userName,reward:otp.rewardName,
+      pts:otp.rewardCost,type:'redeem',date:fD(),ts:Date.now(),
+      empleado:empleado.nombre,pin:PIN_INPUT,estacion:SS?SS.name:'—'
+    });
+    TODAY.rw++;
+    TODAY.canjes.push({reward:otp.rewardName,client:otp.userName,empleado:empleado.nombre,pts:otp.rewardCost,hora:new Date().toLocaleTimeString('es-SV')});
+    if(FC&&FC.id===otp.userId){FC.points-=otp.rewardCost;document.getElementById('cc-pts').textContent=FC.points.toLocaleString()+' puntos';}
+    PIN_OTP_DATA=null;PIN_INPUT='';
+    load(false);updStats();
+    document.getElementById('otp-inp').value='';
+    document.getElementById('otp-btn').style.display='none';
+    document.getElementById('otp-input-wrap').style.borderColor='var(--border)';
+    document.getElementById('otp-status').style.display='none';
+    showSucc('🎁','¡Canje validado!',otp.rewardName,'Por '+empleado.nombre+' · para '+otp.userName);
+  }catch(e){toast('Error al procesar','err');load(false);}
+}
+
+// ─── CIERRE DE TURNO ──────────────────────────────────
+window.abrirCierre=()=>{
+  const now=new Date();
+  document.getElementById('cierre-fecha').textContent=now.toLocaleDateString('es-SV')+' · '+now.toLocaleTimeString('es-SV')+' · '+(SS?SS.name:'—');
+  document.getElementById('c-cl').textContent=TODAY.cl;
+  document.getElementById('c-sales').textContent='$'+TODAY.sales.toFixed(2);
+  document.getElementById('c-pts').textContent=TODAY.pts.toLocaleString();
+  document.getElementById('c-rw').textContent=TODAY.rw;
+  // Canjes del turno
+  const canjesEl=document.getElementById('cierre-canjes');
+  if(!TODAY.canjes.length){canjesEl.innerHTML='<div style="text-align:center;color:var(--text3);padding:16px;font-size:13px">Sin canjes en este turno</div>';}
+  else{canjesEl.innerHTML=TODAY.canjes.map(c=>`
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:20px">🎁</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px">${c.reward}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Cliente: ${c.client} · ${c.hora}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--green);font-weight:700">${c.empleado}</div>
+        <div style="font-size:11px;color:var(--text3)">-${c.pts} pts</div>
+      </div>
+    </div>`).join('');}
+  // Auto-llenar correo si existe
+  if(SS&&SS.cajeroEmail) document.getElementById('cierre-email').value=SS.cajeroEmail;
+  document.getElementById('m-cierre').style.display='flex';
+}
+
+window.cerrarSinEmail=()=>{
+  document.getElementById('m-cierre').style.display='none';
+  resetTurno();
+  toast('Turno cerrado ✓','ok');
+}
+
+window.enviarCierre=async()=>{
+  const email=document.getElementById('cierre-email').value.trim();
+  if(!email){toast('Ingresá un correo','err');return;}
+  load(true,'Enviando resumen...');
+  // Construir cuerpo del correo
+  const now=new Date();
+  const canjesTexto=TODAY.canjes.length?TODAY.canjes.map(c=>`• ${c.reward} — Cliente: ${c.client} — Empleado: ${c.empleado} — ${c.hora} — ${c.pts} pts`).join('\n'):'Sin canjes en este turno';
+  const cuerpo=`CIERRE DE TURNO — ZUNO
+=========================
+Estación: ${SS?SS.name:'—'}
+Fecha: ${now.toLocaleDateString('es-SV')} ${now.toLocaleTimeString('es-SV')}
+
+RESUMEN DEL TURNO
+─────────────────
+Clientes atendidos: ${TODAY.cl}
+Ventas totales:     $${TODAY.sales.toFixed(2)}
+Puntos acreditados: ${TODAY.pts}
+Canjes procesados:  ${TODAY.rw}
+
+DETALLE DE CANJES
+─────────────────
+${canjesTexto}
+
+—
+Sistema Zuno · El Salvador 🇸🇻`;
+
+  try{
+    // Usar EmailJS (debe estar configurado)
+    if(typeof emailjs!=='undefined'){
+      await emailjs.send('service_64nj4qc','template_ldtn2p7',{
+        email:email,
+        subject:(SS?SS.name:'Zuno')+' · '+now.toLocaleDateString('es-SV'),
+        message:cuerpo
+      });
+      toast('📧 Correo enviado ✓','ok');
+    } else {
+      // Fallback: copiar al portapapeles
+      await navigator.clipboard.writeText(cuerpo).catch(()=>{});
+      toast('EmailJS no configurado — resumen copiado ✓','ok');
+    }
+    load(false);
+    document.getElementById('m-cierre').style.display='none';
+    resetTurno();
+  }catch(e){toast('Error al enviar — resumen copiado','err');load(false);}
+}
+
+function resetTurno(){
+  TODAY={cl:0,pts:0,rw:0,sales:0,canjes:[]};
+  updStats();
+}
+
+function updStats(){
+  document.getElementById('st-cl').textContent=TODAY.cl;
+  document.getElementById('st-pts').textContent=TODAY.pts.toLocaleString();
+  document.getElementById('st-rw').textContent=TODAY.rw;
+  document.getElementById('st-sales').textContent='$'+TODAY.sales.toFixed(2);
+}
+
+const showSucc=(ic,title,big,sub)=>{document.getElementById('s-ic').textContent=ic;document.getElementById('s-title').textContent=title;document.getElementById('s-big').textContent=big;document.getElementById('s-sub').textContent=sub;document.getElementById('succ').classList.add('show');}
+window.closeSucc=()=>{document.getElementById('succ').classList.remove('show');document.getElementById('s-inp').value='';document.getElementById('cc').style.display='none';document.getElementById('not-found').style.display='none';FC=null;}
+</script>
+</body>
+</html>
