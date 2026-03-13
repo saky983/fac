@@ -138,6 +138,35 @@ function mostrarBombas() {
 }
 
 // ── GENERAR FACTURAS ──────────────────────────────────────────────────────────
+// ── COMPENSAR NEGATIVOS ────────────────────────────────────────────────────────────────────────────
+// Cada bomba negativa descuenta de la positiva más cercana en monto,
+// del mismo tipo de combustible.
+function compensarNegativos(listaBombas) {
+  const montos = listaBombas.map(b => ({ ...b, monto: Math.round(b.monto * 100) / 100 }));
+  const negativos = montos.filter(b => b.monto < 0);
+
+  negativos.forEach(neg => {
+    const valorNeg = Math.abs(neg.monto);
+
+    // Buscar positiva del mismo sabor con monto >= al negativo,
+    // la más cercana (menor diferencia) a ese valor
+    const positivas = montos
+      .filter(b => b.sabor === neg.sabor && b.monto >= valorNeg)
+      .sort((a, b) => (a.monto - valorNeg) - (b.monto - valorNeg));
+
+    if (positivas.length > 0) {
+      // Encontró una que alcanza — le resta exactamente el valor negativo
+      // dejando ese monto sin facturar
+      positivas[0].monto = Math.round((positivas[0].monto - valorNeg) * 100) / 100;
+    }
+
+    // La negativa queda en 0 — no genera factura
+    neg.monto = 0;
+  });
+
+  return montos.filter(b => b.monto > 0);
+}
+
 function generarFacturas(soloPositivas = false) {
   if (!bombas.length) { alert("Primero lee el PDF."); return; }
 
@@ -146,7 +175,12 @@ function generarFacturas(soloPositivas = false) {
   let bacRestante = Math.round(bacInput * 100) / 100;
   const RESERVA   = 200.00;
 
-  const bombasAUsar   = soloPositivas ? bombas.filter(b => b.monto > 0) : bombas;
+  // Compensar negativos antes de facturar
+  const bombasCompensadas = compensarNegativos(bombas);
+  const bombasAUsar = soloPositivas
+    ? bombasCompensadas.filter(b => b.monto > 0)
+    : bombasCompensadas;
+
   const totalPorSabor = { S: 0, R: 0, D: 0 };
   bombasAUsar.forEach(b => { if (b.monto > 0) totalPorSabor[b.sabor] += b.monto; });
 
