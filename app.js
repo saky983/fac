@@ -173,7 +173,7 @@ function generarFacturas(soloPositivas = false) {
   const bacInput  = parseFloat(document.getElementById("montoBAC").value) || 0;
   facturas        = [];
   let bacRestante = Math.round(bacInput * 100) / 100;
-  const RESERVA   = 200.00;
+  const RESERVA   = 100.00;
 
   // Compensar negativos antes de facturar
   const bombasCompensadas = compensarNegativos(bombas);
@@ -207,14 +207,14 @@ function generarFacturas(soloPositivas = false) {
       bac = Math.round(bac * 100) / 100;
       bacRestante = Math.round((bacRestante - bac) * 100) / 100;
       let tmp = bac;
-      while (tmp > 200) { facturas.push({ bomba: b.bomba, sabor: b.sabor, monto: 200, metodo: "B" }); tmp = Math.round((tmp-200)*100)/100; }
+      while (tmp > 60) { facturas.push({ bomba: b.bomba, sabor: b.sabor, monto: 60, metodo: "B" }); tmp = Math.round((tmp-60)*100)/100; }
       if (tmp > 0) facturas.push({ bomba: b.bomba, sabor: b.sabor, monto: tmp, metodo: "B" });
       monto = Math.round((monto - bac) * 100) / 100;
     }
 
     if (monto <= 0) return;
     let tmp = monto;
-    while (tmp > 200) { facturas.push({ bomba: b.bomba, sabor: b.sabor, monto: 200, metodo: "E" }); tmp = Math.round((tmp-200)*100)/100; }
+    while (tmp > 60) { facturas.push({ bomba: b.bomba, sabor: b.sabor, monto: 60, metodo: "E" }); tmp = Math.round((tmp-60)*100)/100; }
     if (tmp > 0) facturas.push({ bomba: b.bomba, sabor: b.sabor, monto: tmp, metodo: "E" });
   });
 
