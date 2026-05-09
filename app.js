@@ -138,6 +138,64 @@ function mostrarBombas() {
 }
 
 // ── GENERAR FACTURAS ──────────────────────────────────────────────────────────
+// ── SEPARAR PARES MANUALES ────────────────────────────────────────────────────
+// Si bomba X de SUPER y bomba X de REGULAR tienen montos similares (diff ≤ $15)
+// y ambas son ≥ $200, se apartan para facturación manual (los compañeros).
+// Luego busca una bomba DIESEL con monto similar: primero la misma bomba X,
+// si no, cualquier otra bomba Diesel con diff ≤ $15 respecto al promedio del par.
+// Devuelve { paraRobot, paraManuales }
+function separarParesManual(listaBombas) {
+  const UMBRAL_SIMILAR = 15.00;
+  const MINIMO_MANUAL  = 200.00;
+
+  const pool     = listaBombas.map(b => ({ ...b }));
+  const excluidos = new Set(); // índices excluidos del robot
+  const manuales  = [];
+
+  const super_   = pool.filter(b => b.sabor === "S");
+  const regular  = pool.filter(b => b.sabor === "R");
+  const diesel   = pool.filter(b => b.sabor === "D");
+
+  for (const s of super_) {
+    if (s.monto < MINIMO_MANUAL) continue;
+
+    // Buscar la misma bomba en Regular con monto similar
+    const r = regular.find(b =>
+      b.bomba === s.bomba &&
+      b.monto >= MINIMO_MANUAL &&
+      Math.abs(b.monto - s.monto) <= UMBRAL_SIMILAR
+    );
+    if (!r) continue;
+
+    // Par encontrado → apartar ambas
+    manuales.push({ ...s, nota: "manual" });
+    manuales.push({ ...r, nota: "manual" });
+    excluidos.add(`S-${s.bomba}`);
+    excluidos.add(`R-${r.bomba}`);
+
+    const promedioGas = (s.monto + r.monto) / 2;
+
+    // Buscar Diesel: primero misma bomba, luego cualquier otra
+    let d = diesel.find(b =>
+      !excluidos.has(`D-${b.bomba}`) &&
+      b.bomba === s.bomba &&
+      Math.abs(b.monto - promedioGas) <= UMBRAL_SIMILAR
+    );
+    if (!d) {
+      d = diesel
+        .filter(b => !excluidos.has(`D-${b.bomba}`) && Math.abs(b.monto - promedioGas) <= UMBRAL_SIMILAR)
+        .sort((a, b) => Math.abs(a.monto - promedioGas) - Math.abs(b.monto - promedioGas))[0];
+    }
+    if (d) {
+      manuales.push({ ...d, nota: "manual" });
+      excluidos.add(`D-${d.bomba}`);
+    }
+  }
+
+  const paraRobot = pool.filter(b => !excluidos.has(`${b.sabor}-${b.bomba}`));
+  return { paraRobot, manuales };
+}
+
 // ── COMPENSAR NEGATIVOS ────────────────────────────────────────────────────────────────────────────
 // Cada bomba negativa descuenta de la positiva más cercana en monto,
 // del mismo tipo de combustible.
@@ -175,8 +233,11 @@ function generarFacturas(soloPositivas = false) {
   let bacRestante = Math.round(bacInput * 100) / 100;
   const RESERVA   = 100.00;
 
-  // Compensar negativos antes de facturar
-  const bombasCompensadas = compensarNegativos(bombas);
+  // Separar pares manuales (compañeros) ANTES de compensar negativos
+  const { paraRobot, manuales } = separarParesManual(bombas);
+
+  // Compensar negativos solo sobre bombas del robot
+  const bombasCompensadas = compensarNegativos(paraRobot);
   const bombasAUsar = soloPositivas
     ? bombasCompensadas.filter(b => b.monto > 0)
     : bombasCompensadas;
@@ -223,17 +284,40 @@ function generarFacturas(soloPositivas = false) {
   const rS = Math.min(totalPorSabor.S, RESERVA).toFixed(2);
   const rR = Math.min(totalPorSabor.R, RESERVA).toFixed(2);
   const rD = Math.min(totalPorSabor.D, RESERVA).toFixed(2);
-  setStatus(`✅ ${facturas.length} facturas${soloPositivas?" [Solo+]":""} — BAC:$${tB.toFixed(2)} | EF:$${tE.toFixed(2)} | Sin facturar→ S:$${rS} R:$${rR} D:$${rD}`);
-  mostrarFacturas();
+  const manualesInfo = manuales.length
+    ? ` | 👤 Manual(${manuales.length}): ` + manuales.map(m => `B${m.bomba}${m.sabor}=$${m.monto.toFixed(2)}`).join(", ")
+    : "";
+  setStatus(`✅ ${facturas.length} facturas${soloPositivas?" [Solo+]":""} — BAC:$${tB.toFixed(2)} | EF:$${tE.toFixed(2)} | Sin facturar→ S:$${rS} R:$${rR} D:$${rD}${manualesInfo}`);
+  mostrarFacturas(manuales);
 }
 
 // ── MOSTRAR FACTURAS ──────────────────────────────────────────────────────────
-function mostrarFacturas() {
+function mostrarFacturas(manuales = []) {
   const grupos  = { S: [], R: [], D: [] };
   const nombres = { S: "⛽ SUPER", R: "🔵 REGULAR", D: "🟡 DIESEL" };
   facturas.forEach(f => grupos[f.sabor].push(f));
 
   let html = "";
+
+  // Sección de bombas para facturación manual (compañeros)
+  if (manuales.length) {
+    const totalM = manuales.reduce((s,b) => s+b.monto, 0);
+    html += `<div class="grupo" style="border:2px solid #f59e0b;background:#fffbeb">
+      <h3>👤 FACTURACIÓN MANUAL — ${manuales.length} bombas · $${totalM.toFixed(2)}</h3>
+      <table>
+        <thead><tr><th>Bomba</th><th>Combustible</th><th>Monto</th></tr></thead>
+        <tbody>`;
+    manuales.forEach(b => {
+      const nom = nombres[b.sabor] || b.sabor;
+      html += `<tr style="background:#fef3c7">
+        <td>Bomba ${b.bomba}</td>
+        <td>${nom}</td>
+        <td>$${b.monto.toFixed(2)}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
   ["S","R","D"].forEach(tipo => {
     if (!grupos[tipo].length) return;
     const total = grupos[tipo].reduce((s,f) => s+f.monto, 0);
