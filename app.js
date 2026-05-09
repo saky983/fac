@@ -288,18 +288,18 @@ function generarFacturas(soloPositivas = false) {
     ? ` | 👤 Manual(${manuales.length}): ` + manuales.map(m => `B${m.bomba}${m.sabor}=$${m.monto.toFixed(2)}`).join(", ")
     : "";
   setStatus(`✅ ${facturas.length} facturas${soloPositivas?" [Solo+]":""} — BAC:$${tB.toFixed(2)} | EF:$${tE.toFixed(2)} | Sin facturar→ S:$${rS} R:$${rR} D:$${rD}${manualesInfo}`);
-  mostrarFacturas(manuales);
+  mostrarFacturas(manuales, bombasAUsar, totalPorSabor, RESERVA);
 }
 
 // ── MOSTRAR FACTURAS ──────────────────────────────────────────────────────────
-function mostrarFacturas(manuales = []) {
+function mostrarFacturas(manuales = [], bombasAUsar = [], totalPorSabor = {}, RESERVA = 100) {
   const grupos  = { S: [], R: [], D: [] };
   const nombres = { S: "⛽ SUPER", R: "🔵 REGULAR", D: "🟡 DIESEL" };
   facturas.forEach(f => grupos[f.sabor].push(f));
 
   let html = "";
 
-  // Sección de bombas para facturación manual (compañeros)
+  // ── SECCIÓN: FACTURACIÓN MANUAL (compañeros) ──
   if (manuales.length) {
     const totalM = manuales.reduce((s,b) => s+b.monto, 0);
     html += `<div class="grupo-manual">
@@ -313,6 +313,52 @@ function mostrarFacturas(manuales = []) {
         <td>Bomba ${b.bomba}</td>
         <td>${nom}</td>
         <td>$${b.monto.toFixed(2)}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  // ── SECCIÓN: SIN FACTURAR (reserva $100 por sabor) ──
+  // La última bomba de cada sabor absorbe la reserva — calculamos cuánto queda sin facturar por bomba
+  const facturadoPorBomba = {};
+  facturas.forEach(f => {
+    const k = `${f.sabor}-${f.bomba}`;
+    facturadoPorBomba[k] = (facturadoPorBomba[k] || 0) + f.monto;
+  });
+
+  const sinFacturar = [];
+  let reservaRestante = { S: RESERVA, R: RESERVA, D: RESERVA };
+  // Recorrer en orden inverso: la última bomba de cada sabor es la que absorbe la reserva
+  const porSabor = { S: [], R: [], D: [] };
+  bombasAUsar.forEach(b => { if (b.monto > 0) porSabor[b.sabor].push(b); });
+
+  ["S","R","D"].forEach(sabor => {
+    const lista = porSabor[sabor];
+    if (!lista.length) return;
+    // La reserva queda en la última bomba del sabor (la que quedó con menos tras distribuir)
+    // Calculamos: monto original bomba - lo que se facturó de esa bomba
+    lista.forEach(b => {
+      const facturado = facturadoPorBomba[`${b.sabor}-${b.bomba}`] || 0;
+      const diff = Math.round((b.monto - facturado) * 100) / 100;
+      if (diff > 0.01) {
+        sinFacturar.push({ bomba: b.bomba, sabor: b.sabor, monto: diff, razon: "Reserva" });
+      }
+    });
+  });
+
+  if (sinFacturar.length) {
+    const totalSF = sinFacturar.reduce((s,b) => s+b.monto, 0);
+    html += `<div class="grupo" style="border-color:#ff4f5e">
+      <h3 style="color:#ff4f5e">🚫 SIN FACTURAR <span class="badge" style="background:rgba(255,79,94,.15);color:#ff4f5e;border:1px solid #ff4f5e">${sinFacturar.length} bombas</span> · $${totalSF.toFixed(2)}</h3>
+      <table>
+        <thead><tr><th>Bomba</th><th>Combustible</th><th>Monto</th><th>Razón</th></tr></thead>
+        <tbody>`;
+    sinFacturar.forEach(b => {
+      html += `<tr style="color:#ff4f5e">
+        <td>Bomba ${b.bomba}</td>
+        <td>${nombres[b.sabor]}</td>
+        <td>$${b.monto.toFixed(2)}</td>
+        <td>${b.razon}</td>
       </tr>`;
     });
     html += `</tbody></table></div>`;
