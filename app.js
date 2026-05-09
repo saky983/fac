@@ -302,14 +302,14 @@ function mostrarFacturas(manuales = []) {
   // Sección de bombas para facturación manual (compañeros)
   if (manuales.length) {
     const totalM = manuales.reduce((s,b) => s+b.monto, 0);
-    html += `<div class="grupo" style="border:2px solid #f59e0b;background:#fffbeb">
-      <h3>👤 FACTURACIÓN MANUAL — ${manuales.length} bombas · $${totalM.toFixed(2)}</h3>
+    html += `<div class="grupo-manual">
+      <h3>👤 FACTURACIÓN MANUAL <span class="badge manual">${manuales.length} bombas</span> · $${totalM.toFixed(2)}</h3>
       <table>
         <thead><tr><th>Bomba</th><th>Combustible</th><th>Monto</th></tr></thead>
         <tbody>`;
     manuales.forEach(b => {
       const nom = nombres[b.sabor] || b.sabor;
-      html += `<tr style="background:#fef3c7">
+      html += `<tr class="fila-manual">
         <td>Bomba ${b.bomba}</td>
         <td>${nom}</td>
         <td>$${b.monto.toFixed(2)}</td>
