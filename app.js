@@ -318,8 +318,7 @@ function mostrarFacturas(manuales = [], bombasAUsar = [], totalPorSabor = {}, RE
     html += `</tbody></table></div>`;
   }
 
-  // ── SECCIÓN: SIN FACTURAR (reserva $100 por sabor) ──
-  // La última bomba de cada sabor absorbe la reserva — calculamos cuánto queda sin facturar por bomba
+  // ── SECCIÓN: SIN FACTURAR (reserva + manuales) ──
   const facturadoPorBomba = {};
   facturas.forEach(f => {
     const k = `${f.sabor}-${f.bomba}`;
@@ -327,17 +326,17 @@ function mostrarFacturas(manuales = [], bombasAUsar = [], totalPorSabor = {}, RE
   });
 
   const sinFacturar = [];
-  let reservaRestante = { S: RESERVA, R: RESERVA, D: RESERVA };
-  // Recorrer en orden inverso: la última bomba de cada sabor es la que absorbe la reserva
+
+  // 1) Bombas manuales (compañeros) — quedaron fuera del robot
+  manuales.forEach(b => {
+    sinFacturar.push({ bomba: b.bomba, sabor: b.sabor, monto: b.monto, razon: "👤 Manual" });
+  });
+
+  // 2) Bombas del robot que no se facturaron del todo (reserva $100)
   const porSabor = { S: [], R: [], D: [] };
   bombasAUsar.forEach(b => { if (b.monto > 0) porSabor[b.sabor].push(b); });
-
   ["S","R","D"].forEach(sabor => {
-    const lista = porSabor[sabor];
-    if (!lista.length) return;
-    // La reserva queda en la última bomba del sabor (la que quedó con menos tras distribuir)
-    // Calculamos: monto original bomba - lo que se facturó de esa bomba
-    lista.forEach(b => {
+    porSabor[sabor].forEach(b => {
       const facturado = facturadoPorBomba[`${b.sabor}-${b.bomba}`] || 0;
       const diff = Math.round((b.monto - facturado) * 100) / 100;
       if (diff > 0.01) {
