@@ -149,12 +149,18 @@ function separarParesManual(listaBombas) {
   const MINIMO_MANUAL  = 200.00;
 
   const pool     = listaBombas.map(b => ({ ...b }));
-  const excluidos = new Set(); // índices excluidos del robot
+  const excluidos = new Set();
   const manuales  = [];
 
   const super_   = pool.filter(b => b.sabor === "S");
   const regular  = pool.filter(b => b.sabor === "R");
   const diesel   = pool.filter(b => b.sabor === "D");
+
+  // DEBUG: log todos los sabores y montos para ver qué llega
+  console.log("=== separarParesManual ===");
+  console.log("SUPER:", super_.map(b => `B${b.bomba}=$${b.monto}`).join(", "));
+  console.log("REGULAR:", regular.map(b => `B${b.bomba}=$${b.monto}`).join(", "));
+  console.log("DIESEL:", diesel.map(b => `B${b.bomba}=$${b.monto}`).join(", "));
 
   for (const s of super_) {
     if (s.monto < MINIMO_MANUAL) continue;
@@ -192,6 +198,7 @@ function separarParesManual(listaBombas) {
     }
   }
 
+  console.log("Manuales encontrados:", manuales.map(b => `B${b.bomba}${b.sabor}=$${b.monto}`).join(", ") || "ninguno");
   const paraRobot = pool.filter(b => !excluidos.has(`${b.sabor}-${b.bomba}`));
   return { paraRobot, manuales };
 }
