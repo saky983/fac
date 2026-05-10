@@ -145,7 +145,7 @@ function mostrarBombas() {
 // si no, cualquier otra bomba Diesel con diff ≤ $15 respecto al promedio del par.
 // Devuelve { paraRobot, paraManuales }
 function separarParesManual(listaBombas) {
-  const UMBRAL_SIMILAR = 15.00;
+  const UMBRAL_SIMILAR = 60.00;
   const MINIMO_MANUAL  = 200.00;
 
   const pool     = listaBombas.map(b => ({ ...b }));
